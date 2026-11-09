@@ -403,3 +403,4 @@ export default function init() {
   // Initial render
   render();
 }
+

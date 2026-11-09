@@ -1,25 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Source of Business (SoB) Dynamics — rx.sim</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z'/><path d='m8.5 8.5 7 7'/></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z'/><path d='m8.5 8.5 7 7'/></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     <link rel="stylesheet" href="../../css/style.css">
 </head>
+
 <body>
 
     <!-- Navigation -->
     <nav class="nav">
         <div class="container nav-container">
             <a href="../../index.html" class="nav-brand">
-                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
-                    <path d="m8.5 8.5 7 7"/>
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
+                    <path d="m8.5 8.5 7 7" />
                 </svg>
                 <span class="brand-name">rx<span class="brand-dot">.</span>sim</span>
             </a>
@@ -31,8 +37,12 @@
                     <span class="breadcrumb-sep">/</span>
                     <span class="breadcrumb-current">Source of Business</span>
                 </div>
-                <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer" class="nav-link" style="font-size: 0.8125rem;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer" class="nav-link"
+                    style="font-size: 0.8125rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
                     <span>Profile</span>
                 </a>
             </div>
@@ -48,31 +58,45 @@
                 <span>Commercial Pharma Analytics &middot; Longitudinal LRX Modeling</span>
             </div>
             <h1>Source of Business (SoB) Dynamics</h1>
-            <p class="subtitle">Deconstruct patient volume flows into New to Brand (Naive), Switch-In, Add-On Combinations, Restarts, and Continuing Maintenance across configurable lookback windows</p>
+            <p class="subtitle">Deconstruct patient volume flows into New to Brand (Naive), Switch-In, Add-On
+                Combinations, Restarts, and Continuing Maintenance across configurable lookback windows</p>
         </header>
 
         <!-- 2. Theory Section -->
         <div class="theory-box">
             <h3>Longitudinal Source of Business (SoB) Classification</h3>
             <p>
-                Pharma commercial teams cannot rely solely on gross prescription volume; understanding <em>where</em> patients originate dictates commercial strategy, market share defense, and physician detailing. At every brand initiation (Index Claim at $t_{\text{index}}$), we evaluate patient history within a lookback window $[t_{\text{index}} - W_{\text{lookback}}, t_{\text{index}})$:
+                Pharma commercial teams cannot rely solely on gross prescription volume; understanding <em>where</em>
+                patients originate dictates commercial strategy, market share defense, and physician detailing. At every
+                brand initiation (Index Claim at $t_{\text{index}}$), we evaluate patient history within a lookback
+                window $[t_{\text{index}} - W_{\text{lookback}}, t_{\text{index}})$:
             </p>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1rem;">
-                <div style="padding: 0.75rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #38bdf8;">
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <div
+                    style="padding: 0.75rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #38bdf8;">
                     <strong style="color: #38bdf8; font-size: 0.8125rem;">1. New to Brand (NTB / Naive)</strong>
-                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">No prior therapy in lookback window. Represents market expansion and naive treatment initiation.</p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">No prior therapy
+                        in lookback window. Represents market expansion and naive treatment initiation.</p>
                 </div>
-                <div style="padding: 0.75rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #f59e0b;">
+                <div
+                    style="padding: 0.75rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #f59e0b;">
                     <strong style="color: #f59e0b; font-size: 0.8125rem;">2. Switch-In</strong>
-                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Discontinued a competitor therapy within switch window $\Delta t \le W_{\text{switch}}$. Direct competitive conquest.</p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Discontinued a
+                        competitor therapy within switch window $\Delta t \le W_{\text{switch}}$. Direct competitive
+                        conquest.</p>
                 </div>
-                <div style="padding: 0.75rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #a855f7;">
+                <div
+                    style="padding: 0.75rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #a855f7;">
                     <strong style="color: #a855f7; font-size: 0.8125rem;">3. Add-On / Combination</strong>
-                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Initiated brand while continuing active background competitor therapy without discontinuation.</p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Initiated brand
+                        while continuing active background competitor therapy without discontinuation.</p>
                 </div>
-                <div style="padding: 0.75rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #06b6d4;">
+                <div
+                    style="padding: 0.75rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #06b6d4;">
                     <strong style="color: #06b6d4; font-size: 0.8125rem;">4. Restart / Re-initiation</strong>
-                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Prior brand user who experienced a treatment gap $\Delta t > W_{\text{restart}}$ and is now resuming therapy.</p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Prior brand user
+                        who experienced a treatment gap $\Delta t > W_{\text{restart}}$ and is now resuming therapy.</p>
                 </div>
             </div>
         </div>
@@ -91,7 +115,11 @@
 
                     <div class="controls-panel" style="margin-bottom: 0;">
                         <div class="controls-panel-title">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="m10 15 5-3-5-3v6Z" />
+                            </svg>
                             <span>Lookback &amp; Rule Calibration</span>
                         </div>
 
@@ -175,7 +203,8 @@
 
                     <!-- Interactive Individual Patient Journey Inspector -->
                     <div style="margin-top: 1.5rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                             <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground);">
                                 Longitudinal Patient Journey Inspector
                             </h4>
@@ -194,7 +223,12 @@
 
                         <!-- Clinical Reasoning Trace Card -->
                         <div class="callout-insight" id="inspector-callout" style="margin-top: 0.75rem;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
                             <div id="inspector-rationale">
                                 Select a patient to inspect their longitudinal decision rule evaluation.
                             </div>
@@ -211,7 +245,8 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container footer-content">
-            <p>rx.sim &middot; Longitudinal Patient Analytics &middot; <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer">Vimal Joshy</a></p>
+            <p>rx.sim &middot; Longitudinal Patient Analytics &middot; <a href="https://vmljsy.github.io"
+                    target="_blank" rel="noopener noreferrer">Vimal Joshy</a></p>
         </div>
     </footer>
 
@@ -232,4 +267,5 @@
         }
     </script>
 </body>
+
 </html>

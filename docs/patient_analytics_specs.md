@@ -128,3 +128,4 @@ P_{M1} & P_{M2} & \dots & P_{MM}
 Projected market share vector after $k$ cycles:
 
 $$\mathbf{s}_k = \mathbf{s}_0 \mathbf{P}^k$$
+

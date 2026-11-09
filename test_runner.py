@@ -180,7 +180,9 @@ def main():
             print("[FAIL] Could not connect to Chrome debugging port")
             sys.exit(1)
 
-        ws_url = tabs[0]['webSocketDebuggerUrl']
+        page_tabs = [t for t in tabs if t.get('type') == 'page']
+        target_tab = page_tabs[0] if page_tabs else tabs[0]
+        ws_url = target_tab['webSocketDebuggerUrl']
         client = CDPClient(ws_url)
         client.call("Runtime.enable")
         client.call("Page.enable")
