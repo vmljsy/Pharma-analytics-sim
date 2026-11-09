@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand Switching Matrix &amp; Markov Dynamics — rx.sim</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z'/><path d='m8.5 8.5 7 7'/></svg>">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container nav-container">
+            <a href="../../index.html" class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+                    <path d="m8.5 8.5 7 7"/>
+                </svg>
+                <span class="brand-name">rx<span class="brand-dot">.</span>sim</span>
+            </a>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="breadcrumb" style="margin-bottom: 0;">
+                    <a href="../../index.html">Home</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <a href="../../index.html#experiments">Modules</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <span class="breadcrumb-current">Switching Matrix</span>
+                </div>
+                <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer" class="nav-link" style="font-size: 0.8125rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Profile</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <!-- 1. Header -->
+        <header class="experiment-header">
+            <div class="hero-pill" style="margin-bottom: 1rem;">
+                <span class="hero-pill-indicator"></span>
+                <span>Commercial Analytics &middot; Markov Chain Transition Modeling</span>
+            </div>
+            <h1>Brand Switching Matrix &amp; Markov Dynamics</h1>
+            <p class="subtitle">Quantify competitive patient migration, net brand inflow vs outflow, and 12-month market share equilibrium using first-order Markov transition matrices</p>
+        </header>
+
+        <!-- 2. Theory Section -->
+        <div class="theory-box">
+            <h3>Discrete-Time Markov Chains in Longitudinal Market Dynamics</h3>
+            <p>
+                Patient switching across therapeutic classes is modeled as a discrete stochastic process. Let state space $S = \{\text{Brand Alpha}, \text{Comp Beta}, \text{Comp Gamma}, \text{Discontinued}\}$. The transition probability matrix $\mathbf{P}$ satisfies $\sum_j P_{ij} = 1$:
+            </p>
+            <p>
+                $$P_{ij} = \mathbb{P}\left(X_{t+1} = j \;\middle|\; X_t = i\right)$$
+            </p>
+            <p style="font-size: 0.8125rem; color: var(--muted-foreground);">
+                Given an initial market share vector $\mathbf{s}_0$, the projected market share distribution after $k$ treatment cycles is determined by the Chapman-Kolmogorov forward equation:
+            </p>
+            <p>
+                $$\mathbf{s}_k = \mathbf{s}_0 \mathbf{P}^k$$
+            </p>
+            <div style="margin-top: 0.75rem; font-size: 0.875rem; color: var(--muted-foreground);">
+                <strong>Net Switching Balance:</strong> $\text{Net Switch} = \sum_{j \neq \text{Brand}} (\text{Switch-In}_{j \to \text{Brand}} - \text{Switch-Out}_{\text{Brand} \to j})$. A positive net switch drives organic market share growth even when total naive starts plateau.
+            </div>
+        </div>
+
+        <!-- 3. Interactive Workbench -->
+        <section class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h2>Interactive Transition Workbench</h2>
+                <span class="badge badge-emerald" id="market-status-badge">Net Inflow Positive (+3.8%)</span>
+            </div>
+
+            <div class="sim-layout">
+
+                <!-- Sidebar Parameter Controls -->
+                <aside class="sim-sidebar">
+
+                    <div class="controls-panel" style="margin-bottom: 0;">
+                        <div class="controls-panel-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3v10M3 13h10M3 21l8-8M21 3l-8 8"/></svg>
+                            <span>Switching &amp; Retention Controls</span>
+                        </div>
+
+                        <!-- Brand Alpha Retention -->
+                        <div class="control-group">
+                            <label for="retention-slider">
+                                <span>Brand Alpha Retention Rate ($P_{\alpha \to \alpha}$)</span>
+                                <span class="control-value" id="retention-val">82%</span>
+                            </label>
+                            <input type="range" id="retention-slider" min="50" max="95" value="82" step="1">
+                        </div>
+
+                        <!-- Competitor Intrusion -->
+                        <div class="control-group">
+                            <label for="intrusion-slider">
+                                <span>Brand Alpha Switch-In Conquest</span>
+                                <span class="control-value" id="intrusion-val">12%</span>
+                            </label>
+                            <input type="range" id="intrusion-slider" min="2" max="25" value="12" step="1">
+                            <span class="control-hint">Share of competitor defectors won by Brand Alpha</span>
+                        </div>
+
+                        <!-- Discontinuation Rate -->
+                        <div class="control-group">
+                            <label for="churn-slider">
+                                <span>Class Discontinuation Rate</span>
+                                <span class="control-value" id="churn-val">8%</span>
+                            </label>
+                            <input type="range" id="churn-slider" min="2" max="20" value="8" step="1">
+                        </div>
+
+                        <!-- Initial Share -->
+                        <div class="control-group">
+                            <label for="initial-share-slider">
+                                <span>Initial Brand Share ($\mathbf{s}_0$)</span>
+                                <span class="control-value" id="initial-share-val">30%</span>
+                            </label>
+                            <input type="range" id="initial-share-slider" min="10" max="60" value="30" step="5">
+                        </div>
+
+                    </div>
+
+                    <!-- Market Equilibrium Scorecard -->
+                    <div class="stats-card">
+                        <div class="stat-row">
+                            <span class="stat-label">Month 12 Brand Share</span>
+                            <span class="stat-value" id="stat-m12-share" style="color: #38bdf8;">34.2%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Net 12M Share Delta</span>
+                            <span class="stat-value" id="stat-share-delta" style="color: #10b981;">+4.2%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Monthly Retention Rate</span>
+                            <span class="stat-value" id="stat-retention-rate">82.0%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Monthly Switch-Out Leakage</span>
+                            <span class="stat-value" id="stat-leakage" style="color: #f43f5e;">10.0%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Net Switch Ratio</span>
+                            <span class="stat-value" id="stat-net-ratio" style="color: #10b981;">1.24x</span>
+                        </div>
+                    </div>
+
+                </aside>
+
+                <!-- Main Visualization Area -->
+                <div class="sim-main">
+
+                    <!-- Plotly 12-Month Market Share Trajectory -->
+                    <div class="chart-container">
+                        <div id="chart-market-share" style="width: 100%; height: 340px;"></div>
+                    </div>
+
+                    <!-- Markov Transition Matrix Heatmap & Net Balance -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 1.25rem;">
+                        
+                        <!-- Heatmap -->
+                        <div class="chart-container">
+                            <h4 style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--foreground);">
+                                Transition Probability Matrix $\mathbf{P}$
+                            </h4>
+                            <div id="chart-matrix-heatmap" style="width: 100%; height: 260px;"></div>
+                        </div>
+
+                        <!-- Waterfall -->
+                        <div class="chart-container">
+                            <h4 style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--foreground);">
+                                Monthly Net Switching Balance (Inflow − Outflow)
+                            </h4>
+                            <div id="chart-net-balance" style="width: 100%; height: 260px;"></div>
+                        </div>
+
+                    </div>
+
+                    <!-- Callout Insight -->
+                    <div class="callout-insight" id="switching-callout" style="margin-top: 1rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <div id="switching-callout-text">
+                            Simulating Markov transition equilibrium...
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>rx.sim &middot; Longitudinal Patient Analytics &middot; <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer">Vimal Joshy</a></p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script type="module">
+        import init from './simulation.js';
+        init();
+        if (window.renderMathInElement) {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false }
+                ]
+            });
+        }
+    </script>
+</body>
+</html>

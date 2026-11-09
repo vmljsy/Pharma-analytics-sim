@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Source of Business (SoB) Dynamics — rx.sim</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z'/><path d='m8.5 8.5 7 7'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container nav-container">
+            <a href="../../index.html" class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+                    <path d="m8.5 8.5 7 7"/>
+                </svg>
+                <span class="brand-name">rx<span class="brand-dot">.</span>sim</span>
+            </a>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="breadcrumb" style="margin-bottom: 0;">
+                    <a href="../../index.html">Home</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <a href="../../index.html#experiments">Modules</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <span class="breadcrumb-current">Source of Business</span>
+                </div>
+                <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer" class="nav-link" style="font-size: 0.8125rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Profile</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <!-- 1. Header -->
+        <header class="experiment-header">
+            <div class="hero-pill" style="margin-bottom: 1rem;">
+                <span class="hero-pill-indicator"></span>
+                <span>Commercial Pharma Analytics &middot; Longitudinal LRX Modeling</span>
+            </div>
+            <h1>Source of Business (SoB) Dynamics</h1>
+            <p class="subtitle">Deconstruct patient volume flows into New to Brand (Naive), Switch-In, Add-On Combinations, Restarts, and Continuing Maintenance across configurable lookback windows</p>
+        </header>
+
+        <!-- 2. Theory Section -->
+        <div class="theory-box">
+            <h3>Longitudinal Source of Business (SoB) Classification</h3>
+            <p>
+                Pharma commercial teams cannot rely solely on gross prescription volume; understanding <em>where</em> patients originate dictates commercial strategy, market share defense, and physician detailing. At every brand initiation (Index Claim at $t_{\text{index}}$), we evaluate patient history within a lookback window $[t_{\text{index}} - W_{\text{lookback}}, t_{\text{index}})$:
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <div style="padding: 0.75rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #38bdf8;">
+                    <strong style="color: #38bdf8; font-size: 0.8125rem;">1. New to Brand (NTB / Naive)</strong>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">No prior therapy in lookback window. Represents market expansion and naive treatment initiation.</p>
+                </div>
+                <div style="padding: 0.75rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #f59e0b;">
+                    <strong style="color: #f59e0b; font-size: 0.8125rem;">2. Switch-In</strong>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Discontinued a competitor therapy within switch window $\Delta t \le W_{\text{switch}}$. Direct competitive conquest.</p>
+                </div>
+                <div style="padding: 0.75rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #a855f7;">
+                    <strong style="color: #a855f7; font-size: 0.8125rem;">3. Add-On / Combination</strong>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Initiated brand while continuing active background competitor therapy without discontinuation.</p>
+                </div>
+                <div style="padding: 0.75rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #06b6d4;">
+                    <strong style="color: #06b6d4; font-size: 0.8125rem;">4. Restart / Re-initiation</strong>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Prior brand user who experienced a treatment gap $\Delta t > W_{\text{restart}}$ and is now resuming therapy.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Interactive Workbench -->
+        <section class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h2>Interactive Patient Flow Workbench</h2>
+                <span class="badge badge-blue" id="sob-cohort-badge">Cohort N = 1,000 Simulated Patients</span>
+            </div>
+
+            <div class="sim-layout">
+
+                <!-- Sidebar Parameter Controls -->
+                <aside class="sim-sidebar">
+
+                    <div class="controls-panel" style="margin-bottom: 0;">
+                        <div class="controls-panel-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
+                            <span>Lookback &amp; Rule Calibration</span>
+                        </div>
+
+                        <!-- Lookback Window Slider -->
+                        <div class="control-group">
+                            <label for="lookback-slider">
+                                <span>Lookback Window ($W_{\text{lookback}}$)</span>
+                                <span class="control-value" id="lookback-val">180 days</span>
+                            </label>
+                            <input type="range" id="lookback-slider" min="90" max="365" value="180" step="15">
+                            <span class="control-hint">History reviewed prior to brand index fill</span>
+                        </div>
+
+                        <!-- Switch Gap Window Slider -->
+                        <div class="control-group">
+                            <label for="switch-slider">
+                                <span>Switch Window ($W_{\text{switch}}$)</span>
+                                <span class="control-value" id="switch-val">60 days</span>
+                            </label>
+                            <input type="range" id="switch-slider" min="15" max="120" value="60" step="5">
+                            <span class="control-hint">Max gap between competitor drop &amp; brand start</span>
+                        </div>
+
+                        <!-- Restart Gap Threshold Slider -->
+                        <div class="control-group">
+                            <label for="restart-slider">
+                                <span>Restart Threshold ($W_{\text{restart}}$)</span>
+                                <span class="control-value" id="restart-val">90 days</span>
+                            </label>
+                            <input type="range" id="restart-slider" min="45" max="180" value="90" step="15">
+                            <span class="control-hint">Gap required to separate restart from maintenance</span>
+                        </div>
+
+                        <!-- Population Presets -->
+                        <div class="control-group">
+                            <label for="market-preset">
+                                <span>Market Dynamics State</span>
+                            </label>
+                            <select id="market-preset" class="select-input">
+                                <option value="balanced">Balanced Competitive Market</option>
+                                <option value="launch">New Launch Market (High Naive &amp; Switch)</option>
+                                <option value="mature">Mature Brand (High Continuing &amp; Restarts)</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <!-- Volume Share Breakdown Card -->
+                    <div class="stats-card">
+                        <div class="stat-row">
+                            <span class="stat-label">New to Brand (Naive)</span>
+                            <span class="stat-value" id="share-ntb" style="color: #38bdf8;">—</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Competitor Switch-In</span>
+                            <span class="stat-value" id="share-switch" style="color: #f59e0b;">—</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Add-On Combination</span>
+                            <span class="stat-value" id="share-addon" style="color: #a855f7;">—</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Brand Restarts</span>
+                            <span class="stat-value" id="share-restart" style="color: #06b6d4;">—</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Continuing Maintenance</span>
+                            <span class="stat-value" id="share-cont" style="color: #10b981;">—</span>
+                        </div>
+                    </div>
+
+                </aside>
+
+                <!-- Main Visualization Area -->
+                <div class="sim-main">
+
+                    <!-- Flow / Sankey or Distribution Bar -->
+                    <div class="chart-container">
+                        <div id="chart-sob-flow" style="width: 100%; height: 350px;"></div>
+                    </div>
+
+                    <!-- Interactive Individual Patient Journey Inspector -->
+                    <div style="margin-top: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground);">
+                                Longitudinal Patient Journey Inspector
+                            </h4>
+                            <span class="badge" id="inspector-badge">Evaluating Patient P001</span>
+                        </div>
+
+                        <!-- Patient Selection Pills -->
+                        <div class="patient-selector-pills" id="patient-pills-container">
+                            <!-- Populated dynamically: P001 to P008 -->
+                        </div>
+
+                        <!-- Patient Journey Plotly Chart -->
+                        <div class="chart-container" style="margin-top: 0.5rem;">
+                            <div id="chart-patient-journey" style="width: 100%; height: 260px;"></div>
+                        </div>
+
+                        <!-- Clinical Reasoning Trace Card -->
+                        <div class="callout-insight" id="inspector-callout" style="margin-top: 0.75rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <div id="inspector-rationale">
+                                Select a patient to inspect their longitudinal decision rule evaluation.
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>rx.sim &middot; Longitudinal Patient Analytics &middot; <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer">Vimal Joshy</a></p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script type="module">
+        import init from './simulation.js';
+        init();
+        if (window.renderMathInElement) {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false }
+                ]
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Line of Therapy (LoT) Sequencing — rx.sim</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z'/><path d='m8.5 8.5 7 7'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container nav-container">
+            <a href="../../index.html" class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+                    <path d="m8.5 8.5 7 7"/>
+                </svg>
+                <span class="brand-name">rx<span class="brand-dot">.</span>sim</span>
+            </a>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="breadcrumb" style="margin-bottom: 0;">
+                    <a href="../../index.html">Home</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <a href="../../index.html#experiments">Modules</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <span class="breadcrumb-current">Line of Therapy</span>
+                </div>
+                <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer" class="nav-link" style="font-size: 0.8125rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Profile</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <!-- 1. Header -->
+        <header class="experiment-header">
+            <div class="hero-pill" style="margin-bottom: 1rem;">
+                <span class="hero-pill-indicator"></span>
+                <span>Oncology &amp; Specialty Care &middot; Regimen Sequencing</span>
+            </div>
+            <h1>Line of Therapy (LoT) Sequencing</h1>
+            <p class="subtitle">Dissect multi-agent oncology combinations into 1L, 2L, and 3L regimens using regimen definition windows, switch rules, and maintenance de-escalation logic</p>
+        </header>
+
+        <!-- 2. Theory Section -->
+        <div class="theory-box">
+            <h3>Oncology Regimen Identification &amp; LoT Advancement Rules</h3>
+            <p>
+                In oncology and autoimmune diseases, patients frequently receive multi-drug regimens rather than single-agent monotherapy. Health economists and real-world evidence (RWE) scientists partition longitudinal claims into <strong>Lines of Therapy (LoT)</strong> using standardized clinical heuristics:
+            </p>
+            <ul style="margin-left: 1.5rem; margin-bottom: 0.75rem; color: var(--muted-foreground); font-size: 0.875rem; line-height: 1.6;">
+                <li><strong>Regimen Definition Window ($W_{\text{regimen}}$):</strong> Multi-agent regimens (e.g. Carboplatin + Pemetrexed + Pembrolizumab) are rarely dispensed on the exact same second. A window (typically 28 days) from the first antineoplastic claim bundles all initiated agents into the index regimen.</li>
+                <li><strong>Agent Switch:</strong> Replacement of a core agent by an agent of another drug class after $W_{\text{regimen}}$ signifies disease progression or toxicity, triggering an advance to the next line (e.g. $1\text{L} \to 2\text{L}$).</li>
+                <li><strong>Drop-to-Maintenance:</strong> Dropping chemotherapy after 4–6 cycles while continuing targeted/immuno maintenance does <em>not</em> trigger a new line under standard NCCN/ASCO heuristics.</li>
+                <li><strong>Treatment Holiday:</strong> A therapy-free interval $> 90$ or $120$ days without claims marks the end of active line therapy.</li>
+            </ul>
+        </div>
+
+        <!-- 3. Interactive Workbench -->
+        <section class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h2>Interactive Oncology Swimmer Workbench</h2>
+                <span class="badge badge-indigo" id="lot-case-badge">Patient ONC-01: Advanced NSCLC Triplet</span>
+            </div>
+
+            <div class="sim-layout">
+
+                <!-- Sidebar Parameter Controls -->
+                <aside class="sim-sidebar">
+
+                    <div class="controls-panel" style="margin-bottom: 0;">
+                        <div class="controls-panel-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                            <span>Clinical Case &amp; Rules</span>
+                        </div>
+
+                        <!-- Case Selector -->
+                        <div class="control-group">
+                            <label for="case-select">
+                                <span>Clinical Patient Journey</span>
+                            </label>
+                            <select id="case-select" class="select-input">
+                                <option value="onc1">Case 1: NSCLC (Triplet 1L → Switch 2L)</option>
+                                <option value="onc2">Case 2: Breast Cancer (CDK4/6 Maintenance)</option>
+                                <option value="onc3">Case 3: Multiple Myeloma (Triplet → Rechallenge)</option>
+                                <option value="onc4">Case 4: Colorectal (Late Add-On Progression)</option>
+                            </select>
+                        </div>
+
+                        <!-- Regimen Definition Window -->
+                        <div class="control-group">
+                            <label for="window-slider">
+                                <span>Regimen Definition Window</span>
+                                <span class="control-value" id="window-val">28 days</span>
+                            </label>
+                            <input type="range" id="window-slider" min="14" max="60" value="28" step="7">
+                            <span class="control-hint">Days from index to bundle multi-agent therapies</span>
+                        </div>
+
+                        <!-- Allowable Holiday Gap -->
+                        <div class="control-group">
+                            <label for="holiday-slider">
+                                <span>Treatment Holiday Threshold</span>
+                                <span class="control-value" id="holiday-val">90 days</span>
+                            </label>
+                            <input type="range" id="holiday-slider" min="45" max="180" value="90" step="15">
+                            <span class="control-hint">Max gap before line is closed as discontinued</span>
+                        </div>
+
+                        <!-- Maintenance Rule Toggle -->
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle);">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; cursor: pointer;">
+                                <input type="checkbox" id="toggle-maintenance" checked>
+                                <span>Allow Drop-to-Maintenance (Stay in 1L)</span>
+                            </label>
+                        </div>
+
+                    </div>
+
+                    <!-- Line Statistics Card -->
+                    <div class="stats-card">
+                        <div class="stat-row">
+                            <span class="stat-label">Total Lines Identified</span>
+                            <span class="stat-value" id="stat-total-lines">2 Lines</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">1L Treatment Duration</span>
+                            <span class="stat-value" id="stat-1l-duration">180 d</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">2L Treatment Duration</span>
+                            <span class="stat-value" id="stat-2l-duration">120 d</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Total Therapy Horizon</span>
+                            <span class="stat-value" id="stat-total-horizon">300 d</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Progression Status</span>
+                            <span class="stat-value" id="stat-prog-status" style="color: #f43f5e;">Switched (2L)</span>
+                        </div>
+                    </div>
+
+                </aside>
+
+                <!-- Main Visualization Area -->
+                <div class="sim-main">
+
+                    <!-- Plotly Swimmer Plot -->
+                    <div class="chart-container">
+                        <div id="chart-swimmer" style="width: 100%; height: 380px;"></div>
+                    </div>
+
+                    <!-- Assigned LoT Progression Sequence -->
+                    <div style="margin-top: 1.5rem;">
+                        <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--foreground);">
+                            Identified Lines of Therapy &amp; Regimen Details
+                        </h4>
+                        <div class="claims-table-wrapper">
+                            <table class="claims-table">
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th>Regimen Formula</th>
+                                        <th>Start Day</th>
+                                        <th>End Day</th>
+                                        <th>Duration</th>
+                                        <th>Transition / Progression Trigger</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lot-table-body">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Clinical Callout -->
+                    <div class="callout-insight" id="lot-callout" style="margin-top: 1rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <div id="lot-callout-text">
+                            Analyzing oncology regimen sequencing...
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>rx.sim &middot; Longitudinal Patient Analytics &middot; <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer">Vimal Joshy</a></p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script type="module">
+        import init from './simulation.js';
+        init();
+        if (window.renderMathInElement) {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false }
+                ]
+            });
+        }
+    </script>
+</body>
+</html>

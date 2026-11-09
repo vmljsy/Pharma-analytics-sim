@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rx.sim — Longitudinal Patient Analytics &amp; Pharma RWE Lab</title>
+    <meta name="description" content="Visual intuition and mathematical simulations for longitudinal patient claims, episode building, adherence (PDC vs MPR), source of business, persistence, and lines of therapy.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z'/><path d='m8.5 8.5 7 7'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container nav-container">
+            <a href="index.html" class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+                    <path d="m8.5 8.5 7 7"/>
+                </svg>
+                <span class="brand-name">rx<span class="brand-dot">.</span>sim</span>
+            </a>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="nav-links">
+                    <a href="#modules" class="nav-link">Modules</a>
+                    <a href="#architecture" class="nav-link">Architecture</a>
+                    <a href="https://github.com/vmljsy" target="_blank" rel="noopener noreferrer" class="nav-link">GitHub</a>
+                </div>
+                <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer" class="nav-link" style="font-size: 0.8125rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Profile</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-pill">
+                <span class="hero-pill-indicator"></span>
+                <span>Longitudinal Real-World Data (LRX) &middot; Pharma Analytics Lab</span>
+            </div>
+            <h1>Visual Intuition for Patient Claims &amp; Pharma Analytics</h1>
+            <p class="subtitle">
+                Deconstruct raw longitudinal dispensing claims into clinical treatment episodes, Kaplan-Meier persistence curves, 
+                oncology lines of therapy (LoT), and CMS adherence metrics (PDC vs MPR) directly in your browser.
+            </p>
+
+            <!-- Quick Metrics Header -->
+            <div class="metrics-grid" style="margin-top: 2rem;">
+                <div class="metric-card">
+                    <span class="metric-number">6</span>
+                    <span class="metric-title">Interactive Modules</span>
+                    <span class="metric-desc">Claims to Market Models</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-number">100%</span>
+                    <span class="metric-title">Client-Side Runtime</span>
+                    <span class="metric-desc">Zero backend computation</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-number">PQA</span>
+                    <span class="metric-title">Validated Heuristics</span>
+                    <span class="metric-desc">CMS Star Rating Standards</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-number">LRX</span>
+                    <span class="metric-title">Real-World Evidence</span>
+                    <span class="metric-desc">Longitudinal Rx Logic</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Category Tabs -->
+        <section class="section" id="modules">
+            <div class="section-header">
+                <div>
+                    <h2>Interactive Analytics Modules</h2>
+                    <p style="font-size: 0.875rem; color: var(--muted-foreground); margin-top: 0.25rem;">
+                        Select a category to filter clinical episode, commercial market, and biostatistical models
+                    </p>
+                </div>
+                <div class="tabs-list">
+                    <button class="tab-btn active" data-filter="all">All (6)</button>
+                    <button class="tab-btn" data-filter="claims">Claims &amp; Episodes (2)</button>
+                    <button class="tab-btn" data-filter="commercial">Commercial &amp; Flow (2)</button>
+                    <button class="tab-btn" data-filter="clinical">Biostats &amp; Oncology (2)</button>
+                </div>
+            </div>
+
+            <!-- Experiment Cards Grid -->
+            <div class="experiments-grid" id="experiments-grid">
+
+                <!-- Module 1: Episode Building -->
+                <a href="experiments/episode-building/" class="card experiment-card" data-category="claims">
+                    <div class="experiment-card-header">
+                        <div class="hero-pill" style="font-size: 0.75rem;">
+                            <span>Claims Engine</span>
+                        </div>
+                        <span class="badge badge-emerald">Live Interactive</span>
+                    </div>
+                    <h3 class="experiment-card-title">Episode Building &amp; Overlap Resolution</h3>
+                    <p class="experiment-card-desc">
+                        Simulate how discrete prescription dispensing claims transform into continuous treatment episodes under stockpiling (push-forward), truncation, and allowable gap tolerance rules.
+                    </p>
+                    <div class="experiment-card-meta">
+                        <span>$\Delta t \le G_{\text{allowed}}$</span>
+                        <span>Stockpiling vs Truncate</span>
+                        <span>Censoring</span>
+                    </div>
+                </a>
+
+                <!-- Module 2: Compliance & Adherence -->
+                <a href="experiments/compliance-adherence/" class="card experiment-card" data-category="claims">
+                    <div class="experiment-card-header">
+                        <div class="hero-pill" style="font-size: 0.75rem;">
+                            <span>PQA Standards</span>
+                        </div>
+                        <span class="badge badge-emerald">Live Interactive</span>
+                    </div>
+                    <h3 class="experiment-card-title">Compliance: PDC vs MPR Simulator</h3>
+                    <p class="experiment-card-desc">
+                        Demonstrate why CMS and Medicare Star Ratings standardized on Proportion of Days Covered (PDC) over Medication Possession Ratio (MPR) to eliminate early-refill stockpiling distortion.
+                    </p>
+                    <div class="experiment-card-meta">
+                        <span>$\text{PDC} \ge 80\%$ Standard</span>
+                        <span>Uncapped MPR Flaw</span>
+                        <span>365d Bitmask</span>
+                    </div>
+                </a>
+
+                <!-- Module 3: Source of Business -->
+                <a href="experiments/source-of-business/" class="card experiment-card" data-category="commercial">
+                    <div class="experiment-card-header">
+                        <div class="hero-pill" style="font-size: 0.75rem;">
+                            <span>Commercial LRX</span>
+                        </div>
+                        <span class="badge badge-emerald">Live Interactive</span>
+                    </div>
+                    <h3 class="experiment-card-title">Source of Business (SoB) Dynamics</h3>
+                    <p class="experiment-card-desc">
+                        Classify brand initiation volume into New to Brand (Naive), Competitor Switch-In, Add-On Combinations, Restarts, and Continuing Maintenance across configurable lookback windows.
+                    </p>
+                    <div class="experiment-card-meta">
+                        <span>Lookback Window</span>
+                        <span>Patient Journey Inspector</span>
+                        <span>Sankey Flow</span>
+                    </div>
+                </a>
+
+                <!-- Module 4: Brand Switching Matrix -->
+                <a href="experiments/switching-matrix/" class="card experiment-card" data-category="commercial">
+                    <div class="experiment-card-header">
+                        <div class="hero-pill" style="font-size: 0.75rem;">
+                            <span>Market Dynamics</span>
+                        </div>
+                        <span class="badge badge-emerald">Live Interactive</span>
+                    </div>
+                    <h3 class="experiment-card-title">Brand Switching Matrix &amp; Markov Dynamics</h3>
+                    <p class="experiment-card-desc">
+                        Quantify competitive brand migration, net switching balance (inflow vs outflow), and 12-month market share equilibrium using first-order Markov transition matrices.
+                    </p>
+                    <div class="experiment-card-meta">
+                        <span>$\mathbf{s}_{t+1} = \mathbf{s}_t \mathbf{P}$</span>
+                        <span>Net Switch Ratio</span>
+                        <span>Transition Heatmap</span>
+                    </div>
+                </a>
+
+                <!-- Module 5: Treatment Persistence -->
+                <a href="experiments/persistence-analysis/" class="card experiment-card" data-category="clinical">
+                    <div class="experiment-card-header">
+                        <div class="hero-pill" style="font-size: 0.75rem;">
+                            <span>Survival Analysis</span>
+                        </div>
+                        <span class="badge badge-emerald">Live Interactive</span>
+                    </div>
+                    <h3 class="experiment-card-title">Treatment Persistence &amp; Kaplan-Meier</h3>
+                    <p class="experiment-card-desc">
+                        Model time-to-discontinuation (TTD), Greenwood confidence bands, right-censoring, and the real-world permissible gap sensitivity paradox across comparative cohorts.
+                    </p>
+                    <div class="experiment-card-meta">
+                        <span>$\hat{S}(t) = \prod (1 - d_i/n_i)$</span>
+                        <span>Greenwood SE</span>
+                        <span>Gap Sensitivity</span>
+                    </div>
+                </a>
+
+                <!-- Module 6: Line of Therapy -->
+                <a href="experiments/line-of-therapy/" class="card experiment-card" data-category="clinical">
+                    <div class="experiment-card-header">
+                        <div class="hero-pill" style="font-size: 0.75rem;">
+                            <span>Oncology RWE</span>
+                        </div>
+                        <span class="badge badge-emerald">Live Interactive</span>
+                    </div>
+                    <h3 class="experiment-card-title">Line of Therapy (LoT) Sequencing</h3>
+                    <p class="experiment-card-desc">
+                        Dissect multi-agent oncology combinations into 1L, 2L, and 3L regimens using regimen definition windows, switch rules, and chemotherapy drop-to-maintenance de-escalation logic.
+                    </p>
+                    <div class="experiment-card-meta">
+                        <span>28d Regimen Window</span>
+                        <span>Swimmer Plot</span>
+                        <span>Maintenance Drop</span>
+                    </div>
+                </a>
+
+            </div>
+        </section>
+
+        <!-- Architecture & Specifications Section -->
+        <section class="section" id="architecture" style="border-top: 1px solid var(--border-subtle); padding-top: 3rem;">
+            <div class="theory-box">
+                <h3>Pharma Real-World Data (RWD) Engineering Standards</h3>
+                <p>
+                    This laboratory implements industry-standard health economics and outcomes research (HEOR) algorithms formulated by the <strong>Pharmacy Quality Alliance (PQA)</strong>, <strong>ISPOR</strong>, and <strong>NCCN Guidelines</strong>.
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    <div>
+                        <strong style="color: var(--foreground); font-size: 0.8125rem;">Deterministic Push-Forward</strong>
+                        <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">
+                            Accounts for pill stockpiling by advancing future start dates to the exhaustion date of previous fills without double-counting.
+                        </p>
+                    </div>
+                    <div>
+                        <strong style="color: var(--foreground); font-size: 0.8125rem;">Right-Censored Survival</strong>
+                        <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">
+                            Kaplan-Meier product-limit estimators strictly segregate true discontinuation events from administrative study enrollment cutoffs.
+                        </p>
+                    </div>
+                    <div>
+                        <strong style="color: var(--foreground); font-size: 0.8125rem;">Zero-Dependency Engine</strong>
+                        <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">
+                            Pure ES6 modular architecture executing instantaneously in browser WebAssembly / JavaScript runtime with Plotly visualization.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>rx.sim &middot; Longitudinal Patient Analytics &middot; Created by <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer">Vimal Joshy</a></p>
+        </div>
+    </footer>
+
+    <!-- Tab Filtering Script & KaTeX Auto-Render -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.renderMathInElement) {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false }
+                    ]
+                });
+            }
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const filter = btn.getAttribute('data-filter');
+                    document.querySelectorAll('.experiment-card').forEach(card => {
+                        if (filter === 'all' || card.getAttribute('data-category') === filter) {
+                            card.style.display = 'flex';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
