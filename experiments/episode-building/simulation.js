@@ -70,6 +70,9 @@ export default function init() {
   let dragInitialStartDay = 0;
   let dragInitialSupply = 0;
 
+  // Zoom and Viewport State
+  let zoomLevel = 1.0; // 0.6x to 3.5x
+
   // DOM elements
   const scenarioSelect = $('scenario-select');
   const overlapSelect = $('overlap-select');
@@ -122,9 +125,21 @@ export default function init() {
   const btnTableDuplicate = $('btn-table-duplicate');
   const btnTableDelete = $('btn-table-delete');
 
-  // SVG container
+  // SVG & Zoom/Fullscreen containers
+  const interactiveTimelineBox = $('interactive-timeline-box');
   const canvasContainer = $('canvas-container');
   const timelineSvg = $('timeline-svg');
+  const btnZoomIn = $('btn-zoom-in');
+  const btnZoomOut = $('btn-zoom-out');
+  const btnZoomReset = $('btn-zoom-reset');
+  const zoomLevelBadge = $('zoom-level-badge');
+  const btnToggleFullscreen = $('btn-toggle-fullscreen');
+  const fullscreenText = $('fullscreen-text');
+
+  // Plotly chart fullscreen elements
+  const chartContainer = $('chart-container');
+  const btnPlotlyFullscreen = $('btn-plotly-fullscreen');
+  const plotlyFullscreenText = $('plotly-fullscreen-text');
 
   function getSelectedClaim() {
     return currentClaims.find(c => c.id === selectedClaimId) || currentClaims[0];
@@ -427,10 +442,19 @@ export default function init() {
 
   // ─── Render Interactive SVG Timeline Track with Draggable Handles ───
   function renderInteractiveSvgTimeline(claims, episodes, overlapIntervals, studyEnd) {
-    const svgWidth = Math.max(canvasContainer.clientWidth || 800, 750);
-    const svgHeight = 260;
+    const isFullscreen = interactiveTimelineBox?.classList.contains('is-fullscreen');
+    const baseWidth = Math.max(canvasContainer.clientWidth || 800, 750);
+    const svgWidth = Math.round(baseWidth * zoomLevel);
+    const svgHeight = isFullscreen ? Math.max(window.innerHeight - 130, 520) : 260;
+
     timelineSvg.setAttribute('width', svgWidth);
     timelineSvg.setAttribute('height', svgHeight);
+    timelineSvg.style.width = `${svgWidth}px`;
+    timelineSvg.style.height = `${svgHeight}px`;
+
+    if (zoomLevelBadge) {
+      zoomLevelBadge.textContent = `${Math.round(zoomLevel * 100)}%`;
+    }
 
     const marginLeft = 80;
     const marginRight = 40;
@@ -440,21 +464,44 @@ export default function init() {
     const scaleX = day => marginLeft + (day / maxDay) * chartWidth;
     const unscaleX = px => Math.max(0, Math.round(((px - marginLeft) / chartWidth) * maxDay));
 
+    // Dynamic vertical coordinates for Fullscreen vs Normal mode
+    const axisY = isFullscreen ? svgHeight - 35 : 230;
+    const epTrackY = isFullscreen ? 40 : 32;
+    const epTrackH = isFullscreen ? 32 : 26;
+    const conflictY = isFullscreen ? 85 : 85;
+    const conflictH = isFullscreen ? (svgHeight - 135) : 140;
+    const claimsBaseY = isFullscreen ? 120 : 115;
+    const claimSpacing = isFullscreen ? 44 : 36;
+    const barHeight = isFullscreen ? 32 : 28;
+    const lanesCount = isFullscreen ? 5 : 3;
+
     // 1. Time Axis
     const axisGroup = $('svg-time-axis');
-    let axisHtml = `<line x1="${marginLeft}" y1="230" x2="${svgWidth - marginRight}" y2="230" stroke="var(--border)" stroke-width="1"/>`;
-    for (let d = 0; d <= maxDay; d += 30) {
+    let axisHtml = `<line x1="${marginLeft}" y1="${axisY}" x2="${svgWidth - marginRight}" y2="${axisY}" stroke="var(--border)" stroke-width="1"/>`;
+    const tickStep = zoomLevel >= 2.0 ? 15 : (zoomLevel >= 1.5 ? 20 : 30);
+
+    for (let d = 0; d <= maxDay; d += tickStep) {
       const x = scaleX(d);
       axisHtml += `
-        <line x1="${x}" y1="225" x2="${x}" y2="235" stroke="var(--border)" stroke-width="1"/>
-        <text x="${x}" y="248" font-size="10" font-family="Geist Mono, monospace" fill="var(--muted-foreground)" text-anchor="middle">D${d}</text>
+        <line x1="${x}" y1="${axisY - 5}" x2="${x}" y2="${axisY + 5}" stroke="var(--border)" stroke-width="1"/>
+        <text x="${x}" y="${axisY + 18}" font-size="10" font-family="Geist Mono, monospace" fill="var(--muted-foreground)" text-anchor="middle">D${d}</text>
       `;
+    }
+
+    if (zoomLevel >= 1.5) {
+      const subStep = zoomLevel >= 2.5 ? 2 : 5;
+      for (let d = 0; d <= maxDay; d += subStep) {
+        if (d % tickStep !== 0) {
+          const x = scaleX(d);
+          axisHtml += `<line x1="${x}" y1="${axisY - 2}" x2="${x}" y2="${axisY + 2}" stroke="var(--border-subtle)" stroke-width="1"/>`;
+        }
+      }
     }
 
     // Observation window vertical line
     const censorX = scaleX(studyEnd);
     axisHtml += `
-      <line x1="${censorX}" y1="15" x2="${censorX}" y2="230" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/>
+      <line x1="${censorX}" y1="15" x2="${censorX}" y2="${axisY}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/>
       <text x="${censorX}" y="28" font-size="9" font-family="Geist, sans-serif" fill="#f87171" text-anchor="middle">End Study (${studyEnd}d)</text>
     `;
     axisGroup.innerHTML = axisHtml;
@@ -469,26 +516,26 @@ export default function init() {
 
       if (iv.type === 'conflict' || iv.type === 'cap_exceeded') {
         overlapHtml += `
-          <rect x="${x0}" y="85" width="${w}" height="140" class="conflict-rect" rx="2">
+          <rect x="${x0}" y="${conflictY}" width="${w}" height="${conflictH}" class="conflict-rect" rx="2">
             <title>${iv.title}: ${iv.description}</title>
           </rect>
-          <text x="${x0 + w / 2}" y="98" font-size="9" font-family="Geist, sans-serif" fill="#f43f5e" text-anchor="middle" font-weight="600">⚠️ Collision</text>
+          <text x="${x0 + w / 2}" y="${conflictY + 14}" font-size="9" font-family="Geist, sans-serif" fill="#f43f5e" text-anchor="middle" font-weight="600">⚠️ Collision</text>
         `;
       } else if (iv.type === 'synergy') {
         overlapHtml += `
-          <rect x="${x0}" y="85" width="${w}" height="140" class="synergy-rect" rx="2">
+          <rect x="${x0}" y="${conflictY}" width="${w}" height="${conflictH}" class="synergy-rect" rx="2">
             <title>${iv.title}</title>
           </rect>
-          <text x="${x0 + w / 2}" y="98" font-size="9" font-family="Geist, sans-serif" fill="#10b981" text-anchor="middle" font-weight="600">✨ Synergistic</text>
+          <text x="${x0 + w / 2}" y="${conflictY + 14}" font-size="9" font-family="Geist, sans-serif" fill="#10b981" text-anchor="middle" font-weight="600">✨ Synergistic</text>
         `;
       }
     });
     conflictGroup.innerHTML = overlapHtml;
 
-    // 3. Track 0: Continuous Treatment Episodes Track (y: 25 to 65)
+    // 3. Track 0: Continuous Treatment Episodes Track
     const epGroup = $('svg-episodes-track');
     let epTrackHtml = `
-      <text x="10" y="45" font-size="11" font-weight="600" font-family="Geist, sans-serif" fill="var(--foreground)">Treatment Episodes</text>
+      <text x="10" y="${epTrackY + 14}" font-size="11" font-weight="600" font-family="Geist, sans-serif" fill="var(--foreground)">Treatment Episodes</text>
     `;
     episodes.forEach(ep => {
       const x0 = scaleX(ep.startDay);
@@ -499,27 +546,27 @@ export default function init() {
       const fillColor = ep.hasConflict ? 'rgba(244, 63, 94, 0.25)' : (isCensored ? 'rgba(16, 185, 129, 0.22)' : 'rgba(56, 189, 248, 0.22)');
 
       epTrackHtml += `
-        <rect x="${x0}" y="32" width="${w}" height="26" rx="4" fill="${fillColor}" stroke="${strokeColor}" stroke-width="1.8"/>
-        <text x="${x0 + w / 2}" y="49" font-size="10" font-family="Geist, sans-serif" fill="#fafafa" text-anchor="middle" font-weight="500">
+        <rect x="${x0}" y="${epTrackY}" width="${w}" height="${epTrackH}" rx="4" fill="${fillColor}" stroke="${strokeColor}" stroke-width="1.8"/>
+        <text x="${x0 + w / 2}" y="${epTrackY + epTrackH / 2 + 4}" font-size="10" font-family="Geist, sans-serif" fill="#fafafa" text-anchor="middle" font-weight="500">
           ${ep.id} &middot; ${ep.duration}d (${ep.regimenType})
         </text>
       `;
 
       if (!isCensored) {
         epTrackHtml += `
-          <polygon points="${x1},26 ${x1 - 5},32 ${x1 + 5},32" fill="#f43f5e"/>
-          <text x="${x1}" y="22" font-size="9" font-family="Geist, sans-serif" fill="#f87171" text-anchor="middle">Discontinued</text>
+          <polygon points="${x1},${epTrackY - 6} ${x1 - 5},${epTrackY} ${x1 + 5},${epTrackY}" fill="#f43f5e"/>
+          <text x="${x1}" y="${epTrackY - 10}" font-size="9" font-family="Geist, sans-serif" fill="#f87171" text-anchor="middle">Discontinued</text>
         `;
       }
     });
     epGroup.innerHTML = epTrackHtml;
 
-    // 4. Track 1 & 2: Claims Swimmer Bars & Interactive Drag Handles (y: 110 to 220)
+    // 4. Track 1 & 2: Claims Swimmer Bars & Interactive Drag Handles
     const claimsGroup = $('svg-claims-track');
     const handlesGroup = $('svg-handles-layer');
     let claimsHtml = `
-      <text x="10" y="125" font-size="11" font-weight="600" font-family="Geist, sans-serif" fill="var(--foreground)">Prescription Claims</text>
-      <text x="10" y="138" font-size="9" font-family="Geist Mono, monospace" fill="var(--muted-foreground)">(Drag handles)</text>
+      <text x="10" y="${claimsBaseY + 12}" font-size="11" font-weight="600" font-family="Geist, sans-serif" fill="var(--foreground)">Prescription Claims</text>
+      <text x="10" y="${claimsBaseY + 25}" font-size="9" font-family="Geist Mono, monospace" fill="var(--muted-foreground)">(Drag handles)</text>
     `;
     let handlesHtml = '';
 
@@ -531,8 +578,7 @@ export default function init() {
       const w = Math.max(6, x1 - x0);
 
       // Stagger vertical lanes for clarity
-      const y = 115 + (idx % 3) * 36;
-      const barHeight = 28;
+      const y = claimsBaseY + (idx % lanesCount) * claimSpacing;
 
       const primSeg = claim.marketSegments?.[0] || 'GLP1';
       const segDef = MARKET_SEGMENTS[primSeg] || { color: '#38bdf8', bgLight: 'rgba(56,189,248,0.2)' };
@@ -548,7 +594,7 @@ export default function init() {
             <title>Rx #${claim.id}: ${claim.drug} (Day ${claim.startDay} - ${claim.startDay + claim.daysSupply}, ${claim.daysSupply}d)</title>
           </rect>
           <!-- Center Move Grip Cue -->
-          <text x="${x0 + w / 2}" y="${y + 18}" font-size="10" font-family="Geist Mono, monospace" fill="#ffffff" text-anchor="middle" font-weight="500" style="pointer-events: none;">
+          <text x="${x0 + w / 2}" y="${y + barHeight / 2 + 4}" font-size="10" font-family="Geist Mono, monospace" fill="#ffffff" text-anchor="middle" font-weight="500" style="pointer-events: none;">
             ✥ #${claim.id} ${claim.drug.split(' ')[0]} (${claim.daysSupply}d)
           </text>
         </g>
@@ -559,13 +605,13 @@ export default function init() {
         // Left Handle (Push/Pull Start Day)
         handlesHtml += `
           <g class="drag-handle-left-grp" data-claim-id="${claim.id}" title="Drag to pull start earlier or push later">
-            <circle cx="${x0}" cy="${y + barHeight / 2}" r="5.5" fill="#38bdf8" stroke="#ffffff" stroke-width="1.5" class="drag-handle-left"/>
+            <circle cx="${x0}" cy="${y + barHeight / 2}" r="${isFullscreen ? 6.5 : 5.5}" fill="#38bdf8" stroke="#ffffff" stroke-width="1.5" class="drag-handle-left"/>
           </g>
         `;
         // Right Handle (Pull/Extend Days Supply)
         handlesHtml += `
           <g class="drag-handle-right-grp" data-claim-id="${claim.id}" title="Drag to pull/extend duration or shrink">
-            <circle cx="${x1}" cy="${y + barHeight / 2}" r="5.5" fill="#c084fc" stroke="#ffffff" stroke-width="1.5" class="drag-handle-right"/>
+            <circle cx="${x1}" cy="${y + barHeight / 2}" r="${isFullscreen ? 6.5 : 5.5}" fill="#c084fc" stroke="#ffffff" stroke-width="1.5" class="drag-handle-right"/>
           </g>
         `;
       }
@@ -807,7 +853,11 @@ export default function init() {
       marker: { opacity: 0 }
     }];
 
-    Plotly.react('chart-timeline', data, layout, { responsive: true, displayModeBar: false });
+    Plotly.react('chart-timeline', data, layout, {
+      responsive: true,
+      displayModeBar: true,
+      modeBarButtonsToRemove: ['lasso2d', 'select2d']
+    });
   }
 
   // ─── Event Listeners: Sidebar & Parameters ───
@@ -1088,6 +1138,80 @@ export default function init() {
     }
     currentClaims = currentClaims.filter(c => c.id !== selectedClaimId);
     selectedClaimId = currentClaims[0]?.id || 1;
+    render();
+  });
+
+  // ─── Zoom & Viewport Controls ───
+  btnZoomIn?.addEventListener('click', () => {
+    zoomLevel = Math.min(3.5, Math.round((zoomLevel + 0.25) * 100) / 100);
+    render();
+  });
+
+  btnZoomOut?.addEventListener('click', () => {
+    zoomLevel = Math.max(0.6, Math.round((zoomLevel - 0.25) * 100) / 100);
+    render();
+  });
+
+  btnZoomReset?.addEventListener('click', () => {
+    zoomLevel = 1.0;
+    if (canvasContainer) canvasContainer.scrollLeft = 0;
+    render();
+  });
+
+  // Ctrl + Wheel Zoom on Timeline Canvas
+  canvasContainer?.addEventListener('wheel', e => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        zoomLevel = Math.min(3.5, Math.round((zoomLevel + 0.15) * 100) / 100);
+      } else {
+        zoomLevel = Math.max(0.6, Math.round((zoomLevel - 0.15) * 100) / 100);
+      }
+      render();
+    }
+  }, { passive: false });
+
+  // ─── Fullscreen Modes ───
+  function toggleTimelineFullscreen() {
+    if (!interactiveTimelineBox) return;
+    const isFull = interactiveTimelineBox.classList.toggle('is-fullscreen');
+    if (fullscreenText) {
+      fullscreenText.textContent = isFull ? 'Exit' : 'Fullscreen';
+    }
+    render();
+  }
+
+  btnToggleFullscreen?.addEventListener('click', toggleTimelineFullscreen);
+
+  function togglePlotlyFullscreen() {
+    if (!chartContainer) return;
+    const isFull = chartContainer.classList.toggle('is-fullscreen');
+    if (plotlyFullscreenText) {
+      plotlyFullscreenText.textContent = isFull ? 'Exit Fullscreen' : 'Expand Chart';
+    }
+    Plotly.Plots.resize('chart-timeline');
+  }
+
+  btnPlotlyFullscreen?.addEventListener('click', togglePlotlyFullscreen);
+
+  // ESC key to exit active fullscreen
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (interactiveTimelineBox?.classList.contains('is-fullscreen')) {
+        interactiveTimelineBox.classList.remove('is-fullscreen');
+        if (fullscreenText) fullscreenText.textContent = 'Fullscreen';
+        render();
+      }
+      if (chartContainer?.classList.contains('is-fullscreen')) {
+        chartContainer.classList.remove('is-fullscreen');
+        if (plotlyFullscreenText) plotlyFullscreenText.textContent = 'Expand Chart';
+        Plotly.Plots.resize('chart-timeline');
+      }
+    }
+  });
+
+  // Window resize responsive adaptation
+  window.addEventListener('resize', () => {
     render();
   });
 
