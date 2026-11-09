@@ -293,14 +293,51 @@
                 <div class="sim-main">
 
                     <!-- Interactive Swimmer Track with Push-Pull Handles -->
-                    <div class="interactive-timeline-box">
+                    <div class="interactive-timeline-box" id="interactive-timeline-box">
                         <div class="timeline-header-bar">
-                            <div class="timeline-header-title">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
-                                    <path d="m15 18-6-6 6-6"/>
-                                </svg>
-                                <span>Interactive Swimmer Track — Click &amp; Drag Handles to Push / Pull Episodes</span>
+                            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                                <div class="timeline-header-title">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
+                                        <path d="m15 18-6-6 6-6"/>
+                                    </svg>
+                                    <span>Interactive Swimmer Track &amp; Handles</span>
+                                </div>
+
+                                <!-- Zoom & Fullscreen Toolbar -->
+                                <div class="timeline-zoom-controls">
+                                    <button class="handle-btn" id="btn-zoom-out" title="Zoom Out (Pull Timeline Out)">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="11" cy="11" r="8"/>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                            <line x1="8" y1="11" x2="14" y2="11"/>
+                                        </svg>
+                                    </button>
+                                    <span id="zoom-level-badge" class="badge badge-outline" style="font-size: 0.7rem; font-family: var(--font-mono); min-width: 44px; text-align: center;">100%</span>
+                                    <button class="handle-btn" id="btn-zoom-in" title="Zoom In (Magnify Days for Easy Handle Dragging)">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="11" cy="11" r="8"/>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                            <line x1="11" y1="8" x2="11" y2="14"/>
+                                            <line x1="8" y1="11" x2="14" y2="11"/>
+                                        </svg>
+                                    </button>
+                                    <button class="handle-btn" id="btn-zoom-reset" title="Reset Zoom to Fit Width">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                                            <path d="M3 3v5h5"/>
+                                        </svg>
+                                        <span>Fit</span>
+                                    </button>
+                                    <div style="width: 1px; height: 16px; background: var(--border); margin: 0 0.15rem;"></div>
+                                    <button class="handle-btn" id="btn-toggle-fullscreen" title="Toggle Fullscreen Mode (Esc to Exit)">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="fullscreen-icon">
+                                            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                                        </svg>
+                                        <span id="fullscreen-text">Fullscreen</span>
+                                    </button>
+                                </div>
                             </div>
+
                             <!-- Market Segment Legend Pills -->
                             <div class="segment-chips-container" id="legend-market-chips">
                                 <span class="segment-chip" style="background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; color: #38bdf8;">GLP-1 RA</span>
@@ -333,8 +370,16 @@
                         </div>
                     </div>
 
-                    <!-- Macro Plotly Timeline Chart -->
-                    <div class="chart-container" style="position: relative;">
+                    <!-- Macro Plotly Timeline Chart with Fullscreen Option -->
+                    <div class="chart-container" id="chart-container" style="position: relative;">
+                        <div style="position: absolute; top: 8px; right: 8px; z-index: 10; display: flex; gap: 0.35rem;">
+                            <button class="handle-btn" id="btn-plotly-fullscreen" title="Toggle Fullscreen Macro Timeline" style="font-size: 0.7rem; padding: 0.2rem 0.5rem; background: rgba(24, 24, 27, 0.85); backdrop-filter: blur(4px);">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                                </svg>
+                                <span id="plotly-fullscreen-text">Expand Chart</span>
+                            </button>
+                        </div>
                         <div id="chart-timeline" style="width: 100%; height: 320px;"></div>
                     </div>
 
