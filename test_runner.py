@@ -195,6 +195,12 @@ def main():
             ("EXP-04: Line of Therapy", "/experiments/line-of-therapy/index.html"),
             ("EXP-05: Compliance PDC vs MPR", "/experiments/compliance-adherence/index.html"),
             ("EXP-06: Brand Switching Matrix", "/experiments/switching-matrix/index.html"),
+            ("EXP-07: HCP Concentration & SFE", "/experiments/hcp-targeting-sfe/index.html"),
+            ("EXP-08: Patient Demographics & Comorbidities", "/experiments/patient-demographics-comorbidities/index.html"),
+            ("EXP-09: Indication Splitting", "/experiments/indication-splitting/index.html"),
+            ("EXP-10: Open-Network Censoring", "/experiments/open-network-censoring/index.html"),
+            ("EXP-11: Adjudication Funnel", "/experiments/adjudication-funnel/index.html"),
+            ("EXP-12: Synthetic Control & Target Trial", "/experiments/synthetic-control/index.html"),
         ]
 
         all_passed = True

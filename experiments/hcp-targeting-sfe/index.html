@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HCP Prescriber Concentration, Deciles &amp; SFE Alignment — rx.sim</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z'/><path d='m8.5 8.5 7 7'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container nav-container">
+            <a href="../../index.html" class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+                    <path d="m8.5 8.5 7 7"/>
+                </svg>
+                <span class="brand-name">rx<span class="brand-dot">.</span>sim</span>
+            </a>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="breadcrumb" style="margin-bottom: 0;">
+                    <a href="../../index.html">Home</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <a href="../../index.html#modules">Modules</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <span class="breadcrumb-current">HCP Concentration &amp; SFE</span>
+                </div>
+                <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer" class="nav-link" style="font-size: 0.8125rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Profile</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <!-- 1. Header -->
+        <header class="experiment-header">
+            <div class="hero-pill" style="margin-bottom: 1rem;">
+                <span class="hero-pill-indicator"></span>
+                <span>Sales Force Effectiveness (SFE) &middot; Commercial Operations</span>
+            </div>
+            <h1>HCP Prescriber Concentration, Deciles &amp; SFE Alignment</h1>
+            <p class="subtitle">Quantify physician prescribing concentration using Lorenz curves, Gini coefficients, decile/quintile segmentation, and regional sales rep territory call planning</p>
+        </header>
+
+        <!-- 2. Theory Section -->
+        <div class="theory-box">
+            <h3>The Economics of Prescriber Skew &amp; Sales Force Allocation</h3>
+            <p>
+                In pharmaceutical commercial analytics (e.g. IQVIA NPA / Xponent data), prescriber writing behavior follows an extreme power-law distribution. Unlike consumer retail, a small fraction of healthcare professionals (HCPs) drives the vast majority of total prescription volume (TRx/NRx).
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 1rem;">
+                <div style="padding: 1rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #38bdf8;">
+                    <strong style="color: #38bdf8; font-size: 0.875rem;">Lorenz Concentration Curve &amp; Gini Coefficient</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.8125rem;">
+                        $$\text{Gini} = 1 - 2 \int_0^1 L(p) \, dp = \frac{\sum_{i=1}^N (2i - N - 1) y_i}{N \sum_{i=1}^N y_i}$$
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                        <strong>The Pharma 80/20 Reality:</strong> While general wealth has a Gini around $0.4$, pharmaceutical specialty markets exhibit extreme Gini coefficients of $0.65$ to $0.88$. Often, the top $15\%\text{--}20\%$ of prescribers generate over $80\%$ of total brand therapy volume.
+                    </p>
+                </div>
+                <div style="padding: 1rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #10b981;">
+                    <strong style="color: #10b981; font-size: 0.875rem;">Deciles, Quintiles &amp; Reach-Frequency (R&amp;F)</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.8125rem;">
+                        $$\text{Required Reps (FTE)} = \frac{\sum_{d \ge d_{\text{min}}} N_d \times \text{Freq}_d \times \text{Reach}_d}{\text{Rep Monthly Call Capacity}}$$
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                        <strong>SFE Call Planning:</strong> Doctors are binned into Deciles (1 to 10) or Quintiles (1 to 5). Tier 10/9 high-writers receive intensive personal detailing (2–3 calls/month), whereas lower tiers (D1–D4) are addressed via omnichannel non-personal promotion (NPP).
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Interactive Workbench -->
+        <section class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h2>Interactive SFE &amp; Prescriber Workbench</h2>
+                <span class="badge badge-emerald" id="sfe-status-badge">SFE Optimized (94% Target Reach)</span>
+            </div>
+
+            <div class="sim-layout">
+
+                <!-- Sidebar Parameter Controls -->
+                <aside class="sim-sidebar">
+
+                    <div class="controls-panel" style="margin-bottom: 0;">
+                        <div class="controls-panel-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            <span>Market &amp; SFE Parameters</span>
+                        </div>
+
+                        <!-- Therapeutic Specialty Preset -->
+                        <div class="control-group">
+                            <label for="specialty-preset">
+                                <span>Therapeutic Area Preset</span>
+                            </label>
+                            <select id="specialty-preset" class="select-input">
+                                <option value="cardiometabolic">Cardiometabolic (GLP-1 / SGLT2i — Gini ~0.72)</option>
+                                <option value="oncology">Oncology / Hematology (Specialist — Gini ~0.86)</option>
+                                <option value="immunology">Immunology / Biologics (Rheum/Derm — Gini ~0.79)</option>
+                                <option value="rare_disease">Rare Disease / Neurology (High Skew — Gini ~0.90)</option>
+                            </select>
+                        </div>
+
+                        <!-- Quantile Mode Selection -->
+                        <div class="control-group">
+                            <label for="quantile-mode">
+                                <span>Segmentation Granularity</span>
+                            </label>
+                            <select id="quantile-mode" class="select-input">
+                                <option value="decile">Deciles (10 Tiers: D1 - D10)</option>
+                                <option value="quintile">Quintiles (5 Tiers: Q1 - Q5)</option>
+                            </select>
+                        </div>
+
+                        <!-- Concentration / Gini Skew Slider -->
+                        <div class="control-group">
+                            <label for="gini-slider">
+                                <span>Prescriber Skew (Gini Coefficient)</span>
+                                <span class="control-value" id="gini-val">0.76</span>
+                            </label>
+                            <input type="range" id="gini-slider" min="0.50" max="0.90" value="0.76" step="0.02">
+                        </div>
+
+                        <!-- Target Depth Cutoff -->
+                        <div class="control-group">
+                            <label for="target-cutoff-select">
+                                <span>Field Detailing Target Depth</span>
+                            </label>
+                            <select id="target-cutoff-select" class="select-input">
+                                <option value="8">Target Top 3 Tiers (High Concentration)</option>
+                                <option value="7" selected>Target Top 4 Tiers (Balanced Reach)</option>
+                                <option value="5">Target Top 6 Tiers (Broad Coverage)</option>
+                                <option value="1">Target All Tiers (Full Universe)</option>
+                            </select>
+                        </div>
+
+                        <!-- Sales Rep Headcount -->
+                        <div class="control-group">
+                            <label for="reps-slider">
+                                <span>Sales Rep Team Size (FTEs)</span>
+                                <span class="control-value" id="reps-val">65 Reps</span>
+                            </label>
+                            <input type="range" id="reps-slider" min="15" max="150" value="65" step="5">
+                        </div>
+
+                        <!-- Calls Per Rep Per Month -->
+                        <div class="control-group">
+                            <label for="capacity-slider">
+                                <span>Calls / Rep / Month (Capacity)</span>
+                                <span class="control-value" id="capacity-val">110 calls</span>
+                            </label>
+                            <input type="range" id="capacity-slider" min="60" max="150" value="110" step="5">
+                        </div>
+
+                        <!-- Region Focus Filter -->
+                        <div class="control-group">
+                            <label for="region-filter-select">
+                                <span>Territory View / Filter</span>
+                            </label>
+                            <select id="region-filter-select" class="select-input">
+                                <option value="all">All Commercial Regions (National)</option>
+                                <option value="Northeast">Northeast Region</option>
+                                <option value="Southeast">Southeast Region</option>
+                                <option value="Midwest">Midwest Region</option>
+                                <option value="Southwest">Southwest Region</option>
+                                <option value="West">West Region</option>
+                            </select>
+                        </div>
+
+                        <!-- Quick Action Realignment Buttons -->
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle);">
+                            <button id="btn-realign-reps" class="btn btn-secondary btn-sm">
+                                ⚡ Optimize Field Rep Realignment (+15 Reps)
+                            </button>
+                            <button id="btn-reset-sfe" class="btn btn-secondary btn-sm">
+                                Reset SFE Baseline
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- Direct SFE Metric Comparison Scorecard -->
+                    <div class="stats-card">
+                        <div class="stat-row">
+                            <span class="stat-label">Lorenz Gini Index</span>
+                            <span class="stat-value" id="val-gini" style="color: #38bdf8; font-weight: 700;">0.76</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Top 20% Doctor Volume</span>
+                            <span class="stat-value" id="val-top20-vol" style="color: #10b981; font-weight: 700;">81.2%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Top Tier (D10 / Q5) Share</span>
+                            <span class="stat-value" id="val-toptier-share">54.6%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Monthly Detailing Capacity</span>
+                            <span class="stat-value" id="val-rep-capacity">7,150 calls</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Target Tier Demand</span>
+                            <span class="stat-value" id="val-target-demand">6,820 calls</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Target Reach Attainment</span>
+                            <span class="stat-value" id="val-reach-pct" style="color: #10b981;">95.4%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Overall Brand Market Share</span>
+                            <span class="stat-value" id="val-brand-share">32.8%</span>
+                        </div>
+                    </div>
+
+                </aside>
+
+                <!-- Main Visualization Area -->
+                <div class="sim-main">
+
+                    <!-- Plotly Chart 1: Lorenz Curve & Prescriber Concentration -->
+                    <div class="chart-container">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0 0.5rem;">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground);">
+                                Prescriber Concentration: Lorenz Curve &amp; 80/20 Pareto Distribution
+                            </h4>
+                            <span style="font-size: 0.75rem; color: var(--muted-foreground);" id="lorenz-crossover-text">
+                                Top 18.2% HCPs write 80.0% TRx
+                            </span>
+                        </div>
+                        <div id="chart-lorenz-curve" style="width: 100%; height: 320px;"></div>
+                    </div>
+
+                    <!-- Plotly Chart 2: Quantile Waterfall & TRx Volume Breakdown -->
+                    <div class="chart-container" style="margin-top: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0 0.5rem;">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground);">
+                                Prescriber Tiers: Brand vs Competitor TRx &amp; Call Allocation
+                            </h4>
+                            <span style="font-size: 0.75rem; color: var(--muted-foreground);">
+                                Volume distribution across segmentation deciles/quintiles
+                            </span>
+                        </div>
+                        <div id="chart-tier-breakdown" style="width: 100%; height: 310px;"></div>
+                    </div>
+
+                    <!-- Plotly Chart 3: Regional Distribution & Territory Performance -->
+                    <div class="chart-container" style="margin-top: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0 0.5rem;">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground);">
+                                Regional &amp; Territory Alignment: TRx Volume, Share of Voice (SOV) &amp; Quota
+                            </h4>
+                            <span style="font-size: 0.75rem; color: var(--muted-foreground);">
+                                5 Commercial Field Regions (NE, SE, MW, SW, W)
+                            </span>
+                        </div>
+                        <div id="chart-regional-performance" style="width: 100%; height: 300px;"></div>
+                    </div>
+
+                    <!-- Data Table: Prescriber Tier Details -->
+                    <div style="margin-top: 1.5rem;">
+                        <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground); margin-bottom: 0.75rem;">
+                            Prescriber Quantile Detail Matrix &amp; Detailing Economics
+                        </h4>
+                        <div class="claims-table-wrapper" style="overflow-x: auto;">
+                            <table class="claims-table" id="tier-data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tier</th>
+                                        <th>HCP Count</th>
+                                        <th>% Universe</th>
+                                        <th>Market TRx</th>
+                                        <th>% Vol Share</th>
+                                        <th>Brand TRx</th>
+                                        <th>Brand Share</th>
+                                        <th>Avg TRx / HCP</th>
+                                        <th>Target Calls/Mo</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tier-table-body">
+                                    <!-- Dynamically populated rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Commercial Operations Callout Insight -->
+                    <div class="callout-insight" id="sfe-callout" style="margin-top: 1.25rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <div id="sfe-callout-text">
+                            Analyzing field sales force capacity and prescriber coverage...
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>rx.sim &middot; Longitudinal Patient Analytics &middot; <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer">Vimal Joshy</a></p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script type="module">
+        import init from './simulation.js';
+        init();
+        if (window.renderMathInElement) {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false }
+                ]
+            });
+        }
+    </script>
+</body>
+</html>
+

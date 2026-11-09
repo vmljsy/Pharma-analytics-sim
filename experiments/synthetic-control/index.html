@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthetic Control &amp; Target Trial Emulation — rx.sim</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z'/><path d='m8.5 8.5 7 7'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container nav-container">
+            <a href="../../index.html" class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+                    <path d="m8.5 8.5 7 7"/>
+                </svg>
+                <span class="brand-name">rx<span class="brand-dot">.</span>sim</span>
+            </a>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="breadcrumb" style="margin-bottom: 0;">
+                    <a href="../../index.html">Home</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <a href="../../index.html#modules">Modules</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <span class="breadcrumb-current">Target Trial Emulation</span>
+                </div>
+                <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer" class="nav-link" style="font-size: 0.8125rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Profile</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <!-- 1. Header -->
+        <header class="experiment-header">
+            <div class="hero-pill" style="margin-bottom: 1rem;">
+                <span class="hero-pill-indicator"></span>
+                <span>Causal Inference &middot; Target Trial Emulation (TTE) &amp; IPTW</span>
+            </div>
+            <h1>Synthetic Control &amp; Target Trial Emulation</h1>
+            <p class="subtitle">Eliminate confounding by indication and immortal time bias in observational comparative effectiveness using Inverse Probability of Treatment Weighting (IPTW) and Clone-Censor-Weight trial emulation</p>
+        </header>
+
+        <!-- 2. Theory Section -->
+        <div class="theory-box">
+            <h3>Confounding by Indication, Propensity Scores &amp; Target Trial Emulation</h3>
+            <p>
+                In observational real-world claims, treatment assignment is not randomized. Sicker, older, and multi-morbid patients are selectively channeled into newer second-line therapies (Brand Alpha), producing severe bias:
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 1rem;">
+                <div style="padding: 1rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #f43f5e;">
+                    <strong style="color: #f43f5e; font-size: 0.875rem;">1. The Confounding Trap (Naive KM)</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.8125rem;">
+                        $$\text{Naive HR} \ne \text{Causal Effect} \quad (\text{Omitted Variable Bias})$$
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                        Because Brand Alpha patients have higher baseline Charlson Comorbidity scores and frailty, unadjusted survival curves falsely imply that Brand Alpha is inferior or equivalent to standard of care.
+                    </p>
+                </div>
+                <div style="padding: 1rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #10b981;">
+                    <strong style="color: #10b981; font-size: 0.875rem;">2. IPTW &amp; Target Trial Emulation (CCW)</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.8125rem;">
+                        $$w_i = \frac{Z_i}{e_i} + \frac{1 - Z_i}{1 - e_i}, \qquad e_i = P(Z_i = 1 \mid \mathbf{X}_i)$$
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                        <strong>Pseudo-Population Balancing:</strong> Propensity score weighting creates a synthetic balanced cohort where covariate distributions match ($|\text{SMD}| < 0.1$), unveiling the true causal treatment benefit.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Interactive Workbench -->
+        <section class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                <h2>Interactive Causal Inference Workbench</h2>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button id="btn-pin-curve" class="btn btn-secondary btn-sm">📌 Pin Current Survival Curve</button>
+                    <button id="btn-export-csv" class="btn btn-secondary btn-sm">📥 Download Trial Cohort CSV</button>
+                    <span class="badge badge-emerald" id="causal-badge">Causal Effect: HR 0.74 (p < 0.001)</span>
+                </div>
+            </div>
+
+            <div class="sim-layout">
+
+                <!-- Sidebar Parameter Controls -->
+                <aside class="sim-sidebar">
+
+                    <div class="controls-panel" style="margin-bottom: 0;">
+                        <div class="controls-panel-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                            <span>Causal Design Parameters</span>
+                        </div>
+
+                        <!-- Causal Adjustment Methodology -->
+                        <div class="control-group">
+                            <label for="method-select">
+                                <span>Analytical Adjustment Method</span>
+                            </label>
+                            <select id="method-select" class="select-input">
+                                <option value="naive">1. Naive Unadjusted Observational KM</option>
+                                <option value="iptw" selected>2. Propensity Score Weighting (IPTW)</option>
+                                <option value="target_trial">3. Target Trial Emulation (Clone-Censor-Weight)</option>
+                                <option value="compare_all">4. Compare All Methods Simultaneously</option>
+                            </select>
+                        </div>
+
+                        <!-- Channeling Confounding Intensity -->
+                        <div class="control-group">
+                            <label for="confounding-slider">
+                                <span>Baseline Confounding Skew</span>
+                                <span class="control-value" id="confounding-val">Severe (0.80)</span>
+                            </label>
+                            <input type="range" id="confounding-slider" min="0.10" max="0.90" value="0.75" step="0.05">
+                            <span class="control-hint">Degree to which sicker patients receive Brand Alpha</span>
+                        </div>
+
+                        <!-- True Drug Treatment Effect -->
+                        <div class="control-group">
+                            <label for="treatment-effect-slider">
+                                <span>True Biological Efficacy Hazard Ratio</span>
+                                <span class="control-value" id="treatment-effect-val">HR 0.70</span>
+                            </label>
+                            <input type="range" id="treatment-effect-slider" min="0.50" max="0.95" value="0.70" step="0.05">
+                            <span class="control-hint">Underlying causal hazard ratio (lower = stronger benefit)</span>
+                        </div>
+
+                        <!-- Cohort Size -->
+                        <div class="control-group">
+                            <label for="cohort-size-slider">
+                                <span>Total Study Population ($N$)</span>
+                                <span class="control-value" id="cohort-size-val">3,000</span>
+                            </label>
+                            <input type="range" id="cohort-size-slider" min="1000" max="6000" value="3000" step="500">
+                        </div>
+
+                    </div>
+
+                    <!-- Direct Causal Metrics Scorecard -->
+                    <div class="stats-card">
+                        <div class="stat-row">
+                            <span class="stat-label">Observed Naive Hazard Ratio</span>
+                            <span class="stat-value" id="stat-naive-hr" style="color: #f43f5e; font-weight: 700;">1.04</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Causal Adjusted Hazard Ratio</span>
+                            <span class="stat-value" id="stat-causal-hr" style="color: #10b981; font-weight: 700;">0.72</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Max Covariate SMD (Unweighted)</span>
+                            <span class="stat-value" id="stat-unweighted-smd" style="color: #f43f5e;">0.54 (Severe)</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Max Covariate SMD (IPTW)</span>
+                            <span class="stat-value" id="stat-iptw-smd" style="color: #10b981;">0.04 (Balanced)</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">12M Persistence Difference</span>
+                            <span class="stat-value" id="stat-persistence-diff" style="color: #38bdf8;">+14.6%</span>
+                        </div>
+                    </div>
+
+                </aside>
+
+                <!-- Main Visualization Area -->
+                <div class="sim-main">
+
+                    <!-- Plotly Causal vs Naive Survival Curves -->
+                    <div class="chart-container">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0 0.5rem;">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground);">
+                                Comparative Survival: Naive Confounded vs Causal Adjusted (IPTW &amp; Target Trial)
+                            </h4>
+                            <span style="font-size: 0.75rem; color: var(--muted-foreground);">
+                                Demonstrating reversal of Simpson's paradox in observational claims
+                            </span>
+                        </div>
+                        <div id="chart-causal-survival" style="width: 100%; height: 340px;"></div>
+                    </div>
+
+                    <!-- Love Plot Covariate Balance & Propensity Overlap -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 1.25rem;">
+                        
+                        <!-- Love Plot -->
+                        <div class="chart-container">
+                            <h4 style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--foreground);">
+                                Covariate Balance Love Plot (SMD < 0.1 Threshold)
+                            </h4>
+                            <div id="chart-love-plot" style="width: 100%; height: 260px;"></div>
+                        </div>
+
+                        <!-- Propensity Overlap -->
+                        <div class="chart-container">
+                            <h4 style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--foreground);">
+                                Propensity Score Overlap Distribution ($e_i$)
+                            </h4>
+                            <div id="chart-propensity-overlap" style="width: 100%; height: 260px;"></div>
+                        </div>
+
+                    </div>
+
+                    <!-- Callout Insight -->
+                    <div class="callout-insight" id="causal-callout" style="margin-top: 1rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <div id="causal-callout-text">
+                            Analyzing causal confounding adjustments...
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>rx.sim &middot; Longitudinal Patient Analytics &middot; <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer">Vimal Joshy</a></p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script type="module">
+        import init from './simulation.js';
+        init();
+        if (window.renderMathInElement) {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false }
+                ]
+            });
+        }
+    </script>
+</body>
+</html>
+

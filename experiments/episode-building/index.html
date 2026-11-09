@@ -94,9 +94,11 @@
 
         <!-- 3. Interactive Workbench -->
         <section class="section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
                 <h2>Interactive Multi-Market Episode Workbench</h2>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button class="btn btn-secondary btn-sm" id="btn-pin-timeline">📌 Pin Current Timeline</button>
+                    <button class="btn btn-secondary btn-sm" id="btn-export-claims-csv">📥 Download Claims CSV</button>
                     <span class="badge badge-blue" id="badge-status">Push-Forward Stockpiling</span>
                     <span class="badge badge-emerald" id="badge-restrictions-status">Rules Active</span>
                 </div>
@@ -213,39 +215,26 @@
                                 </select>
                             </div>
 
-                            <!-- Rules Checklist -->
-                            <div class="rule-pill-list">
-                                <div class="rule-item rule-conflict">
-                                    <div class="rule-info">
-                                        <div style="display: flex; align-items: center; gap: 0.35rem;">
-                                            <span class="rule-name">GLP-1 RA + DPP-4i</span>
-                                            <span class="badge badge-rose" style="font-size: 0.65rem; padding: 0.1rem 0.35rem;">Prohibited</span>
-                                        </div>
-                                        <span class="rule-desc">Therapeutic duplication on incretin axis.</span>
+                            <!-- Multi-Market Restriction Matrix (M x M) -->
+                            <div class="restriction-matrix-container">
+                                <div class="matrix-toolbar">
+                                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                        <span style="font-size: 0.72rem; font-weight: 600; color: var(--foreground);">Multi-Market Restriction Matrix ($M \times M$)</span>
                                     </div>
-                                    <input type="checkbox" id="rule-check-glp1-dpp4" checked class="switch-input" style="width: 28px; height: 16px;">
+                                    <div style="display: flex; gap: 0.3rem; align-items: center;">
+                                        <button class="handle-btn" id="btn-matrix-allow-all" title="Allow All Overlaps" style="font-size: 0.68rem; padding: 0.15rem 0.35rem;">✓ Allow All</button>
+                                        <button class="handle-btn" id="btn-matrix-disallow-all" title="Disallow All Overlaps" style="font-size: 0.68rem; padding: 0.15rem 0.35rem;">✕ Disallow All</button>
+                                        <button class="handle-btn" id="btn-matrix-reset-guidelines" title="Reset to Clinical Guidelines" style="font-size: 0.68rem; padding: 0.15rem 0.35rem;">↺ Reset</button>
+                                    </div>
                                 </div>
-
-                                <div class="rule-item rule-conflict">
-                                    <div class="rule-info">
-                                        <div style="display: flex; align-items: center; gap: 0.35rem;">
-                                            <span class="rule-name">GLP-1 RA + Dual Incretin</span>
-                                            <span class="badge badge-rose" style="font-size: 0.65rem; padding: 0.1rem 0.35rem;">Prohibited</span>
-                                        </div>
-                                        <span class="rule-desc">Redundant GLP-1 mechanism of action.</span>
-                                    </div>
-                                    <input type="checkbox" id="rule-check-glp1-dual" checked class="switch-input" style="width: 28px; height: 16px;">
+                                <div class="matrix-scroll-wrapper">
+                                    <table class="restriction-matrix-table" id="restriction-matrix-table">
+                                        <!-- Dynamically populated with all market segments -->
+                                    </table>
                                 </div>
-
-                                <div class="rule-item rule-synergy">
-                                    <div class="rule-info">
-                                        <div style="display: flex; align-items: center; gap: 0.35rem;">
-                                            <span class="rule-name">SGLT-2i + GLP-1 RA</span>
-                                            <span class="badge badge-emerald" style="font-size: 0.65rem; padding: 0.1rem 0.35rem;">Synergistic</span>
-                                        </div>
-                                        <span class="rule-desc">Guideline-approved cardio-renal synergy.</span>
-                                    </div>
-                                    <input type="checkbox" id="rule-check-sglt2-glp1" checked class="switch-input" style="width: 28px; height: 16px;">
+                                <div style="padding: 0.4rem 0.6rem; font-size: 0.6875rem; color: var(--muted-foreground); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border-subtle);">
+                                    <span>Click cell to toggle: <strong style="color: #34d399;">✓ Allowed</strong> vs <strong style="color: #fb7185;">✕ Restricted</strong></span>
+                                    <span style="font-family: var(--font-mono); font-size: 0.65rem;">Symmetric (A⇄B)</span>
                                 </div>
                             </div>
                         </div>
@@ -336,16 +325,26 @@
                                         <span id="fullscreen-text">Fullscreen</span>
                                     </button>
                                 </div>
+
+                                <!-- Episode View Mode Toggle (Regimen vs Segment-Specific Overlaps) -->
+                                <div class="view-mode-toggle" id="view-mode-toggle" title="Switch between Combined Regimen Episodes and Segment-Specific Episodes">
+                                    <button class="view-mode-btn active" data-view="regimen" id="btn-view-regimen">Unified Regimen</button>
+                                    <button class="view-mode-btn" data-view="segment" id="btn-view-segment">Segment Episodes</button>
+                                </div>
                             </div>
 
-                            <!-- Market Segment Legend Pills -->
-                            <div class="segment-chips-container" id="legend-market-chips">
-                                <span class="segment-chip" style="background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; color: #38bdf8;">GLP-1 RA</span>
-                                <span class="segment-chip" style="background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #10b981;">SGLT-2i</span>
-                                <span class="segment-chip" style="background: rgba(245, 158, 11, 0.15); border-color: #f59e0b; color: #f59e0b;">DPP-4i</span>
-                                <span class="segment-chip" style="background: rgba(168, 85, 247, 0.15); border-color: #a855f7; color: #a855f7;">Insulin</span>
-                                <span class="segment-chip" style="background: rgba(244, 63, 94, 0.15); border-color: #f43f5e; color: #f43f5e;">Dual Incretin</span>
-                                <span class="segment-chip" style="background: rgba(6, 182, 212, 0.15); border-color: #06b6d4; color: #06b6d4;">Metformin</span>
+                            <!-- Market Segment Legend Pills with Add Segment Trigger -->
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                <div class="segment-chips-container" id="legend-market-chips">
+                                    <!-- Populated dynamically from all market segments including custom ones -->
+                                </div>
+                                <button class="btn btn-outline btn-sm" id="btn-open-add-segment" style="font-size: 0.72rem; padding: 0.2rem 0.55rem; display: inline-flex; align-items: center; gap: 0.35rem; border-style: dashed;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19"/>
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                    <span>+ Add Market Segment</span>
+                                </button>
                             </div>
                         </div>
 
@@ -429,6 +428,25 @@
                         </div>
                     </div>
 
+                    <!-- Advanced RWE Analytics: Støvring Waiting-Time Distribution (WTD) & 2D Sensitivity -->
+                    <div style="margin-top: 1.25rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
+                        <div class="chart-container" style="padding: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                                <strong style="font-size: 0.8125rem; color: var(--foreground);">Støvring Waiting-Time Distribution (WTD)</strong>
+                                <span class="badge badge-outline" style="font-size: 0.7rem;" id="badge-wtd-cutoff">95th Percentile: 58d</span>
+                            </div>
+                            <div id="chart-wtd" style="width: 100%; height: 260px;"></div>
+                        </div>
+
+                        <div class="chart-container" style="padding: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                                <strong style="font-size: 0.8125rem; color: var(--foreground);">2D Gap vs. Stockpiling Persistence Surface</strong>
+                                <span style="font-size: 0.7rem; color: var(--muted-foreground);">Contour Heatmap</span>
+                            </div>
+                            <div id="chart-sensitivity-heatmap" style="width: 100%; height: 260px;"></div>
+                        </div>
+                    </div>
+
                     <!-- Directly Editable Claims & Episode Data Table -->
                     <div style="margin-top: 1.5rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
@@ -481,6 +499,68 @@
         </section>
 
     </main>
+
+    <!-- Modal Dialog: Add Custom Market Segment -->
+    <div class="modal-overlay" id="modal-add-segment">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
+                        <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+                        <path d="m8.5 8.5 7 7"/>
+                    </svg>
+                    <span>Add Custom Market Segment</span>
+                </div>
+                <button class="modal-close-btn" id="btn-close-modal">&times;</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+                <div class="control-group" style="margin-bottom: 0;">
+                    <label for="input-seg-id" style="font-size: 0.75rem;">
+                        <span>Segment Acronym / Code (Unique ID)</span>
+                    </label>
+                    <input type="text" id="input-seg-id" class="table-num-input" placeholder="e.g. MRA, TZD, SU, PCSK9" style="width: 100%; text-align: left; text-transform: uppercase;">
+                    <span class="control-hint">Short uppercase identifier used in claims and matrix</span>
+                </div>
+                <div class="control-group" style="margin-bottom: 0;">
+                    <label for="input-seg-name" style="font-size: 0.75rem;">
+                        <span>Short Display Name</span>
+                    </label>
+                    <input type="text" id="input-seg-name" class="table-num-input" placeholder="e.g. MRA / Finerenone" style="width: 100%; text-align: left;">
+                </div>
+                <div class="control-group" style="margin-bottom: 0;">
+                    <label for="input-seg-fullname" style="font-size: 0.75rem;">
+                        <span>Full Category / Mechanism</span>
+                    </label>
+                    <input type="text" id="input-seg-fullname" class="table-num-input" placeholder="e.g. Mineralocorticoid Receptor Antagonists" style="width: 100%; text-align: left;">
+                </div>
+                <div class="control-group" style="margin-bottom: 0;">
+                    <label for="input-seg-drug" style="font-size: 0.75rem;">
+                        <span>Default Representative Drug</span>
+                    </label>
+                    <input type="text" id="input-seg-drug" class="table-num-input" placeholder="e.g. Kerendia (20mg)" style="width: 100%; text-align: left;">
+                </div>
+                <div class="control-group" style="margin-bottom: 0;">
+                    <label style="font-size: 0.75rem;">
+                        <span>Theme Color</span>
+                    </label>
+                    <div class="color-swatches-grid" id="color-swatches-container">
+                        <span class="color-swatch-item active" data-color="#ec4899" style="background: #ec4899;"></span>
+                        <span class="color-swatch-item" data-color="#8b5cf6" style="background: #8b5cf6;"></span>
+                        <span class="color-swatch-item" data-color="#0ea5e9" style="background: #0ea5e9;"></span>
+                        <span class="color-swatch-item" data-color="#14b8a6" style="background: #14b8a6;"></span>
+                        <span class="color-swatch-item" data-color="#84cc16" style="background: #84cc16;"></span>
+                        <span class="color-swatch-item" data-color="#eab308" style="background: #eab308;"></span>
+                        <span class="color-swatch-item" data-color="#f97316" style="background: #f97316;"></span>
+                        <input type="color" id="input-seg-color" value="#ec4899" style="width: 26px; height: 26px; border: none; background: transparent; cursor: pointer; padding: 0;">
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+                <button class="btn btn-secondary btn-sm" id="btn-cancel-add-segment">Cancel</button>
+                <button class="btn btn-primary btn-sm" id="btn-save-add-segment">Create Market Segment</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">

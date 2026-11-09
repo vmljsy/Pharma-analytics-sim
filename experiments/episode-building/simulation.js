@@ -10,6 +10,7 @@ import {
   DEFAULT_RESTRICTION_RULES,
   checkMarketCompatibility
 } from '../../js/common.js';
+import { exportToCSV, serializeStateToURL, deserializeStateFromURL } from '../../js/distributions.js';
 
 // Pre-configured multi-market clinical scenarios
 const SCENARIOS = {
@@ -56,12 +57,56 @@ const SCENARIOS = {
   ]
 };
 
+// Helper: Convert hex string to rgba with given alpha
+function hexToRgba(hex, alpha = 0.2) {
+  let c = (hex || '#38bdf8').replace('#', '');
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  const num = parseInt(c, 16);
+  if (isNaN(num)) return `rgba(56, 189, 248, ${alpha})`;
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// Helper: Build default clinical restriction matrix from active segment keys
+function createClinicalRestrictionMatrix(segments) {
+  const matrix = {};
+  const keys = Object.keys(segments);
+  for (const s1 of keys) {
+    matrix[s1] = {};
+    for (const s2 of keys) {
+      if (s1 === s2) {
+        matrix[s1][s2] = 'self';
+      } else {
+        const rule = DEFAULT_RESTRICTION_RULES.find(r =>
+          (r.pair[0] === s1 && r.pair[1] === s2) ||
+          (r.pair[1] === s1 && r.pair[0] === s2)
+        );
+        if (rule) {
+          matrix[s1][s2] = rule.type === 'prohibited_overlap' ? 'restricted' : 'synergistic';
+        } else {
+          matrix[s1][s2] = 'allowed';
+        }
+      }
+    }
+  }
+  return matrix;
+}
+
 export default function init() {
+  // Application State
   let currentClaims = JSON.parse(JSON.stringify(SCENARIOS.synergistic_combo));
   let selectedClaimId = currentClaims[0]?.id || 1;
-  let activeRules = JSON.parse(JSON.stringify(DEFAULT_RESTRICTION_RULES));
   let enforceHard = false;
   let maxConcurrentSegments = 2;
+  let episodeViewMode = 'regimen'; // 'regimen' | 'segment'
+
+  // Dynamic Market Segments state (seeded with built-in classes)
+  let currentMarketSegments = JSON.parse(JSON.stringify(MARKET_SEGMENTS));
+
+  // Dynamic Multi-Market Restriction Matrix state (M x M)
+  let restrictionMatrix = createClinicalRestrictionMatrix(currentMarketSegments);
 
   // Dragging state for timeline canvas handles
   let dragMode = null; // 'left' (pull start), 'right' (pull duration), 'move' (shift start)
@@ -73,7 +118,7 @@ export default function init() {
   // Zoom and Viewport State
   let zoomLevel = 1.0; // 0.6x to 3.5x
 
-  // DOM elements
+  // DOM elements: Scenario and Parameters
   const scenarioSelect = $('scenario-select');
   const overlapSelect = $('overlap-select');
   const gapSlider = $('gap-slider');
@@ -101,9 +146,30 @@ export default function init() {
   // Restrictions panel elements
   const switchHardRestrictions = $('switch-hard-restrictions');
   const selectMaxSegments = $('select-max-segments');
-  const ruleCheckGlp1Dpp4 = $('rule-check-glp1-dpp4');
-  const ruleCheckGlp1Dual = $('rule-check-glp1-dual');
-  const ruleCheckSglt2Glp1 = $('rule-check-sglt2-glp1');
+
+  // Matrix toolbar & table elements
+  const restrictionMatrixTable = $('restriction-matrix-table');
+  const btnMatrixAllowAll = $('btn-matrix-allow-all');
+  const btnMatrixDisallowAll = $('btn-matrix-disallow-all');
+  const btnMatrixResetGuidelines = $('btn-matrix-reset-guidelines');
+
+  // View mode toggle
+  const btnViewRegimen = $('btn-view-regimen');
+  const btnViewSegment = $('btn-view-segment');
+
+  // Market legend & Add Segment Modal
+  const legendMarketChips = $('legend-market-chips');
+  const btnOpenAddSegment = $('btn-open-add-segment');
+  const modalAddSegment = $('modal-add-segment');
+  const btnCloseModal = $('btn-close-modal');
+  const btnCancelAddSegment = $('btn-cancel-add-segment');
+  const btnSaveAddSegment = $('btn-save-add-segment');
+  const inputSegId = $('input-seg-id');
+  const inputSegName = $('input-seg-name');
+  const inputSegFullName = $('input-seg-fullname');
+  const inputSegDrug = $('input-seg-drug');
+  const inputSegColor = $('input-seg-color');
+  const colorSwatchesContainer = $('color-swatches-container');
 
   // Inspector card elements
   const inspectorCard = $('inspector-card');
@@ -149,15 +215,6 @@ export default function init() {
     enforceHard = switchHardRestrictions?.checked ?? false;
     maxConcurrentSegments = parseInt(selectMaxSegments?.value, 10) || 2;
 
-    const rGlp1Dpp4 = activeRules.find(r => r.id === 'rule-glp1-dpp4');
-    if (rGlp1Dpp4 && ruleCheckGlp1Dpp4) rGlp1Dpp4.enabled = ruleCheckGlp1Dpp4.checked;
-
-    const rGlp1Dual = activeRules.find(r => r.id === 'rule-glp1-dual');
-    if (rGlp1Dual && ruleCheckGlp1Dual) rGlp1Dual.enabled = ruleCheckGlp1Dual.checked;
-
-    const rSglt2Glp1 = activeRules.find(r => r.id === 'rule-sglt2-glp1');
-    if (rSglt2Glp1 && ruleCheckSglt2Glp1) rSglt2Glp1.enabled = ruleCheckSglt2Glp1.checked;
-
     if (badgeRestrictionsStatus) {
       if (enforceHard) {
         badgeRestrictionsStatus.className = 'badge badge-rose';
@@ -169,6 +226,7 @@ export default function init() {
     }
   }
 
+  // ─── Main Render Function ───
   function render() {
     syncRulesFromUI();
 
@@ -184,13 +242,13 @@ export default function init() {
       selectedClaimId = currentClaims[0].id;
     }
 
-    // Run episode building engine with multi-market options
+    // Run episode building engine with multi-market options & restriction matrix
     const result = buildTreatmentEpisodes(currentClaims, allowableGap, overlapMethod, studyEnd, {
-      rules: activeRules,
+      restrictionMatrix: restrictionMatrix,
       enforceHard: enforceHard,
       maxConcurrentSegments: maxConcurrentSegments
     });
-    const { episodes, adjustedClaims, stats, overlapIntervals } = result;
+    const { episodes, segmentEpisodes, adjustedClaims, stats, overlapIntervals } = result;
 
     // Update statistics
     statEpisodes.textContent = stats.totalEpisodes;
@@ -214,6 +272,12 @@ export default function init() {
       badgeStatus.textContent = 'Parallel Concurrent';
     }
 
+    // Render Restriction Matrix (M x M)
+    renderRestrictionMatrix();
+
+    // Render Market Legend Chips
+    renderMarketLegendChips();
+
     // Dynamic Clinical Insight Callout
     renderInsightCallout(adjustedClaims, overlapIntervals, overlapMethod);
 
@@ -224,12 +288,287 @@ export default function init() {
     renderClaimsTable(adjustedClaims, episodes, allowableGap);
 
     // Render Interactive SVG Timeline Track with Draggable Handles
-    renderInteractiveSvgTimeline(adjustedClaims, episodes, overlapIntervals, studyEnd);
+    renderInteractiveSvgTimeline(adjustedClaims, episodes, segmentEpisodes, overlapIntervals, studyEnd);
 
     // Render Macro Plotly Timeline
-    renderPlotlyTimeline(adjustedClaims, episodes, overlapIntervals, studyEnd, allowableGap);
+    renderPlotlyTimeline(adjustedClaims, episodes, segmentEpisodes, overlapIntervals, studyEnd, allowableGap);
   }
 
+  // ─── Render Restriction Matrix (M x M) ───
+  function renderRestrictionMatrix() {
+    if (!restrictionMatrixTable) return;
+    const segKeys = Object.keys(currentMarketSegments);
+
+    let html = '<thead><tr><th style="padding: 0.35rem; font-size: 0.65rem; color: var(--muted-foreground); text-align: left;">Segment</th>';
+    for (const s of segKeys) {
+      const seg = currentMarketSegments[s];
+      html += `<th style="padding: 0.35rem 0.3rem; font-size: 0.65rem; color: ${seg?.color || 'var(--foreground)'}; text-align: center;" title="${seg?.fullName || s}">${s}</th>`;
+    }
+    html += '</tr></thead><tbody>';
+
+    for (const s1 of segKeys) {
+      const seg1 = currentMarketSegments[s1];
+      html += `<tr><th style="padding: 0.35rem 0.4rem; font-size: 0.65rem; color: ${seg1?.color || 'var(--foreground)'}; text-align: left;" title="${seg1?.fullName || s1}">${s1}</th>`;
+      for (const s2 of segKeys) {
+        if (s1 === s2) {
+          html += `<td class="matrix-cell matrix-cell-self" title="${s1} Self-Refill: managed by stockpiling vs truncation">—</td>`;
+        } else {
+          const status = restrictionMatrix[s1]?.[s2] || 'allowed';
+          let cellClass = 'matrix-cell-allowed';
+          let icon = '✓';
+          let tip = `${s1} + ${s2}: Allowed concurrent overlap (Click to cycle)`;
+
+          if (status === 'restricted') {
+            cellClass = 'matrix-cell-restricted';
+            icon = '✕';
+            tip = `${s1} + ${s2}: Restricted Therapeutic Duplication (Click to cycle)`;
+          } else if (status === 'synergistic') {
+            cellClass = 'matrix-cell-synergy';
+            icon = '★';
+            tip = `${s1} + ${s2}: Guideline-Recommended Synergistic Add-On (Click to cycle)`;
+          }
+
+          html += `<td class="matrix-cell ${cellClass}" data-s1="${s1}" data-s2="${s2}" title="${tip}">${icon}</td>`;
+        }
+      }
+      html += '</tr>';
+    }
+    html += '</tbody>';
+    restrictionMatrixTable.innerHTML = html;
+  }
+
+  // Toggle restriction matrix cell symmetrically: allowed -> restricted -> synergistic -> allowed
+  function toggleMatrixCell(s1, s2) {
+    if (s1 === s2 || !restrictionMatrix[s1] || !restrictionMatrix[s2]) return;
+    const current = restrictionMatrix[s1][s2] || 'allowed';
+    let next = 'restricted';
+    if (current === 'allowed') {
+      next = 'restricted';
+    } else if (current === 'restricted') {
+      next = 'synergistic';
+    } else if (current === 'synergistic') {
+      next = 'allowed';
+    }
+    restrictionMatrix[s1][s2] = next;
+    restrictionMatrix[s2][s1] = next;
+    render();
+  }
+
+  // Click handler on matrix table
+  restrictionMatrixTable?.addEventListener('click', e => {
+    const cell = e.target.closest('.matrix-cell');
+    if (!cell || cell.classList.contains('matrix-cell-self')) return;
+    const s1 = cell.getAttribute('data-s1');
+    const s2 = cell.getAttribute('data-s2');
+    if (s1 && s2) {
+      toggleMatrixCell(s1, s2);
+    }
+  });
+
+  // Matrix toolbar button listeners
+  btnMatrixAllowAll?.addEventListener('click', () => {
+    const keys = Object.keys(currentMarketSegments);
+    for (const s1 of keys) {
+      if (!restrictionMatrix[s1]) restrictionMatrix[s1] = {};
+      for (const s2 of keys) {
+        if (s1 !== s2) {
+          restrictionMatrix[s1][s2] = 'allowed';
+        }
+      }
+    }
+    render();
+  });
+
+  btnMatrixDisallowAll?.addEventListener('click', () => {
+    const keys = Object.keys(currentMarketSegments);
+    for (const s1 of keys) {
+      if (!restrictionMatrix[s1]) restrictionMatrix[s1] = {};
+      for (const s2 of keys) {
+        if (s1 !== s2) {
+          restrictionMatrix[s1][s2] = 'restricted';
+        }
+      }
+    }
+    render();
+  });
+
+  btnMatrixResetGuidelines?.addEventListener('click', () => {
+    restrictionMatrix = createClinicalRestrictionMatrix(currentMarketSegments);
+    render();
+  });
+
+  // ─── Render Market Legend Chips ───
+  function renderMarketLegendChips() {
+    if (!legendMarketChips) return;
+    let html = '';
+    for (const [id, seg] of Object.entries(currentMarketSegments)) {
+      html += `
+        <span class="segment-chip ${seg.isCustom ? 'segment-chip-custom' : ''}" 
+              style="background: ${seg.bgLight}; border-color: ${seg.color}; color: ${seg.color}; font-size: 0.72rem; padding: 0.2rem 0.5rem;"
+              title="${seg.fullName} (${seg.mechanism || ''})">
+          <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: ${seg.color}; margin-right: 4px;"></span>
+          ${seg.name}
+          ${seg.isCustom ? `<span class="chip-delete-btn" data-delete-seg="${id}" title="Delete Custom Segment ${id}">&times;</span>` : ''}
+        </span>
+      `;
+    }
+    legendMarketChips.innerHTML = html;
+  }
+
+  // Legend chip click handler (delete custom segment)
+  legendMarketChips?.addEventListener('click', e => {
+    const delBtn = e.target.closest('.chip-delete-btn');
+    if (delBtn) {
+      const segId = delBtn.getAttribute('data-delete-seg');
+      if (segId) {
+        deleteCustomMarketSegment(segId);
+      }
+    }
+  });
+
+  // Add Custom Market Segment API
+  function addCustomMarketSegment(customSeg) {
+    const id = (customSeg.id || '').toUpperCase().trim();
+    if (!id || !/^[A-Z0-9_-]+$/.test(id)) {
+      alert('Please enter a valid alphanumeric Segment ID (e.g. MRA, TZD, PCSK9).');
+      return false;
+    }
+    if (currentMarketSegments[id]) {
+      alert(`Market Segment "${id}" already exists.`);
+      return false;
+    }
+
+    const color = customSeg.color || '#ec4899';
+    const name = customSeg.name?.trim() || `${id} Class`;
+    const fullName = customSeg.fullName?.trim() || `${name} Mechanism`;
+    const defaultDrug = customSeg.defaultDrug?.trim() || `${name} (Standard)`;
+
+    currentMarketSegments[id] = {
+      id,
+      name,
+      fullName,
+      color,
+      bgLight: hexToRgba(color, 0.15),
+      border: color,
+      badgeClass: 'badge-outline',
+      examples: [defaultDrug],
+      defaultDrug,
+      mechanism: fullName,
+      isCustom: true
+    };
+
+    // Expand restriction matrix for the new segment
+    restrictionMatrix[id] = {};
+    for (const s of Object.keys(currentMarketSegments)) {
+      if (s === id) {
+        restrictionMatrix[id][s] = 'self';
+      } else {
+        restrictionMatrix[id][s] = 'allowed';
+        if (!restrictionMatrix[s]) restrictionMatrix[s] = {};
+        restrictionMatrix[s][id] = 'allowed';
+      }
+    }
+
+    render();
+    return true;
+  }
+
+  // Delete Custom Market Segment API
+  function deleteCustomMarketSegment(segId) {
+    if (!currentMarketSegments[segId] || !currentMarketSegments[segId].isCustom) return false;
+    delete currentMarketSegments[segId];
+
+    // Remove from matrix
+    delete restrictionMatrix[segId];
+    for (const s of Object.keys(restrictionMatrix)) {
+      delete restrictionMatrix[s][segId];
+    }
+
+    // Fallback any claims currently using this segment to first remaining segment
+    const fallbackSeg = Object.keys(currentMarketSegments)[0] || 'GLP1';
+    currentClaims.forEach(c => {
+      if (c.marketSegments && c.marketSegments.includes(segId)) {
+        c.marketSegments = c.marketSegments.filter(s => s !== segId);
+        if (c.marketSegments.length === 0) {
+          c.marketSegments = [fallbackSeg];
+          c.drug = currentMarketSegments[fallbackSeg]?.defaultDrug || 'Prescription Claim';
+        }
+      }
+    });
+
+    render();
+    return true;
+  }
+
+  // ─── Modal Dialog Event Handlers ───
+  btnOpenAddSegment?.addEventListener('click', () => {
+    if (inputSegId) inputSegId.value = '';
+    if (inputSegName) inputSegName.value = '';
+    if (inputSegFullName) inputSegFullName.value = '';
+    if (inputSegDrug) inputSegDrug.value = '';
+    if (inputSegColor) inputSegColor.value = '#ec4899';
+
+    // Reset swatch active class
+    const swatches = colorSwatchesContainer?.querySelectorAll('.color-swatch-item');
+    swatches?.forEach(s => s.classList.remove('active'));
+    if (swatches && swatches[0]) swatches[0].classList.add('active');
+
+    modalAddSegment?.classList.add('active');
+  });
+
+  btnCloseModal?.addEventListener('click', () => {
+    modalAddSegment?.classList.remove('active');
+  });
+
+  btnCancelAddSegment?.addEventListener('click', () => {
+    modalAddSegment?.classList.remove('active');
+  });
+
+  // Modal swatch click
+  colorSwatchesContainer?.addEventListener('click', e => {
+    const item = e.target.closest('.color-swatch-item');
+    if (item) {
+      colorSwatchesContainer.querySelectorAll('.color-swatch-item').forEach(s => s.classList.remove('active'));
+      item.classList.add('active');
+      const c = item.getAttribute('data-color');
+      if (inputSegColor && c) inputSegColor.value = c;
+    }
+  });
+
+  inputSegColor?.addEventListener('input', () => {
+    colorSwatchesContainer?.querySelectorAll('.color-swatch-item').forEach(s => s.classList.remove('active'));
+  });
+
+  // Modal save button
+  btnSaveAddSegment?.addEventListener('click', () => {
+    const id = inputSegId?.value?.toUpperCase().trim();
+    const name = inputSegName?.value?.trim() || (id ? `${id} Class` : '');
+    const fullName = inputSegFullName?.value?.trim() || `${name} Mechanism`;
+    const defaultDrug = inputSegDrug?.value?.trim() || `${name} (Standard)`;
+    const color = inputSegColor?.value || '#ec4899';
+
+    const success = addCustomMarketSegment({ id, name, fullName, defaultDrug, color });
+    if (success) {
+      modalAddSegment?.classList.remove('active');
+    }
+  });
+
+  // ─── View Mode Toggle ───
+  btnViewRegimen?.addEventListener('click', () => {
+    episodeViewMode = 'regimen';
+    btnViewRegimen.classList.add('active');
+    btnViewSegment?.classList.remove('active');
+    render();
+  });
+
+  btnViewSegment?.addEventListener('click', () => {
+    episodeViewMode = 'segment';
+    btnViewSegment.classList.add('active');
+    btnViewRegimen?.classList.remove('active');
+    render();
+  });
+
+  // ─── Clinical Insight Callout ───
   function renderInsightCallout(claims, intervals, overlapMethod) {
     const conflicts = intervals.filter(i => i.type === 'conflict' || i.type === 'cap_exceeded');
     const synergies = intervals.filter(i => i.type === 'synergy');
@@ -237,16 +576,16 @@ export default function init() {
     if (conflicts.length > 0) {
       calloutBox.className = 'callout-insight callout-conflict';
       const c = conflicts[0];
-      const segNames = c.segments.map(s => MARKET_SEGMENTS[s]?.name || s).join(' + ');
+      const segNames = c.segments.map(s => currentMarketSegments[s]?.name || s).join(' + ');
       calloutText.innerHTML = `
         <strong>Therapeutic Duplication Conflict Detected:</strong> Between Day ${c.start} and Day ${c.end}, 
         concurrent overlap of <strong>${segNames}</strong> occurs. ${c.description || 'This combination violates guideline restrictions.'}
-        ${enforceHard ? '<span style="color: #fff; font-weight: 600;"> [Hard Enforcement Mode will prevent this pairing]</span>' : ''}
+        ${enforceHard ? '<span style="color: #fff; font-weight: 600;"> [Hard Enforcement Mode will truncate or block this pairing]</span>' : ''}
       `;
     } else if (synergies.length > 0) {
       calloutBox.className = 'callout-insight callout-synergy';
       const s = synergies[0];
-      const segNames = s.segments.map(sg => MARKET_SEGMENTS[sg]?.name || sg).join(' + ');
+      const segNames = s.segments.map(sg => currentMarketSegments[sg]?.name || sg).join(' + ');
       calloutText.innerHTML = `
         <strong>Guideline-Approved Synergistic Combination:</strong> Patient receives concurrent 
         <strong>${segNames}</strong> therapy from Day ${s.start} to Day ${s.end} (${s.duration} days). 
@@ -276,6 +615,7 @@ export default function init() {
     }
   }
 
+  // ─── Inspector Card ───
   function renderInspectorCard(adjustedClaims) {
     const claim = adjustedClaims.find(c => c.id === selectedClaimId) || adjustedClaims[0];
     if (!claim) {
@@ -292,7 +632,7 @@ export default function init() {
     const curSegs = claim.marketSegments || ['GLP1'];
     let segChipsHtml = '';
     curSegs.forEach(segKey => {
-      const segDef = MARKET_SEGMENTS[segKey] || { name: segKey, color: '#38bdf8', bgLight: 'rgba(56,189,248,0.15)' };
+      const segDef = currentMarketSegments[segKey] || { name: segKey, color: '#38bdf8', bgLight: 'rgba(56,189,248,0.15)' };
       segChipsHtml += `
         <span class="segment-chip" style="background: ${segDef.bgLight}; border-color: ${segDef.color}; color: ${segDef.color};">
           ${segDef.name}
@@ -302,12 +642,12 @@ export default function init() {
     });
     inspectorSegmentBadges.innerHTML = segChipsHtml;
 
-    // Render live compatibility pills: which other markets can be added to this claim?
+    // Render live compatibility pills for all available market segments
     let compatHtml = '';
-    Object.keys(MARKET_SEGMENTS).forEach(segKey => {
+    Object.keys(currentMarketSegments).forEach(segKey => {
       const isSelected = curSegs.includes(segKey);
-      const segDef = MARKET_SEGMENTS[segKey];
-      const compat = checkMarketCompatibility(curSegs, segKey, activeRules, enforceHard);
+      const segDef = currentMarketSegments[segKey];
+      const compat = checkMarketCompatibility(curSegs, segKey, restrictionMatrix, enforceHard);
 
       if (isSelected) {
         compatHtml += `
@@ -358,10 +698,11 @@ export default function init() {
     }
   }
 
+  // ─── Claims & Episodes Data Table ───
   function renderClaimsTable(claims, episodes, allowableGap) {
     let tableHtml = '';
 
-    claims.forEach((claim, idx) => {
+    claims.forEach(claim => {
       const isSelected = claim.id === selectedClaimId;
       const curSegs = claim.marketSegments || ['GLP1'];
       const ep = episodes.find(e => e.claims.some(c => c.id === claim.id));
@@ -370,7 +711,7 @@ export default function init() {
       // Market Segment pills in table row
       let segChips = '';
       curSegs.forEach(s => {
-        const def = MARKET_SEGMENTS[s] || { name: s, color: '#38bdf8', bgLight: 'rgba(56,189,248,0.15)' };
+        const def = currentMarketSegments[s] || { name: s, color: '#38bdf8', bgLight: 'rgba(56,189,248,0.15)' };
         segChips += `
           <span class="segment-chip" style="background: ${def.bgLight}; border-color: ${def.color}; color: ${def.color}; font-size: 0.65rem; padding: 0.15rem 0.4rem;">
             ${def.name}
@@ -401,7 +742,7 @@ export default function init() {
           <td>
             <div style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
               ${segChips}
-              <button class="handle-btn btn-table-seg-toggle" data-id="${claim.id}" style="padding: 0.1rem 0.35rem; font-size: 0.65rem;" title="Change Market Segment">✎</button>
+              <button class="handle-btn btn-table-seg-toggle" data-id="${claim.id}" style="padding: 0.1rem 0.35rem; font-size: 0.65rem;" title="Cycle Market Segment">✎</button>
             </div>
           </td>
           <td>
@@ -441,127 +782,152 @@ export default function init() {
   }
 
   // ─── Render Interactive SVG Timeline Track with Draggable Handles ───
-  function renderInteractiveSvgTimeline(claims, episodes, overlapIntervals, studyEnd) {
+  function renderInteractiveSvgTimeline(claims, episodes, segmentEpisodes, overlapIntervals, studyEnd) {
     const isFullscreen = interactiveTimelineBox?.classList.contains('is-fullscreen');
     const baseWidth = Math.max(canvasContainer.clientWidth || 800, 750);
     const svgWidth = Math.round(baseWidth * zoomLevel);
-    const svgHeight = isFullscreen ? Math.max(window.innerHeight - 130, 520) : 260;
+
+    // Dynamic height calculation based on view mode (regimen vs multi-segment lanes)
+    const presentSegments = Object.keys(segmentEpisodes || {});
+    const segTrackCount = (episodeViewMode === 'segment' && presentSegments.length > 0) ? presentSegments.length : 1;
+    const epTrackH = 34;
+    const epSectionH = segTrackCount * (epTrackH + 6) + 20;
+
+    const lanesCount = Math.min(claims.length, 4) || 1;
+    const barHeight = isFullscreen ? 26 : 22;
+    const claimSpacing = barHeight + 8;
+    const claimsSectionH = lanesCount * claimSpacing + 30;
+
+    const svgHeight = isFullscreen ? Math.max(window.innerHeight - 130, epSectionH + claimsSectionH + 100) : (epSectionH + claimsSectionH + 70);
 
     timelineSvg.setAttribute('width', svgWidth);
     timelineSvg.setAttribute('height', svgHeight);
-    timelineSvg.style.width = `${svgWidth}px`;
-    timelineSvg.style.height = `${svgHeight}px`;
+    if (zoomLevelBadge) zoomLevelBadge.textContent = `${Math.round(zoomLevel * 100)}%`;
 
-    if (zoomLevelBadge) {
-      zoomLevelBadge.textContent = `${Math.round(zoomLevel * 100)}%`;
-    }
-
-    const marginLeft = 80;
-    const marginRight = 40;
-    const chartWidth = svgWidth - marginLeft - marginRight;
+    const marginL = 120;
+    const marginR = 50;
+    const chartW = svgWidth - marginL - marginR;
     const maxDay = Math.max(studyEnd + 30, 420);
 
-    const scaleX = day => marginLeft + (day / maxDay) * chartWidth;
-    const unscaleX = px => Math.max(0, Math.round(((px - marginLeft) / chartWidth) * maxDay));
+    const scaleX = day => marginL + (day / maxDay) * chartW;
+    const unscaleX = px => Math.max(0, Math.round(((px - marginL) / chartW) * maxDay));
 
-    // Dynamic vertical coordinates for Fullscreen vs Normal mode
-    const axisY = isFullscreen ? svgHeight - 35 : 230;
-    const epTrackY = isFullscreen ? 40 : 32;
-    const epTrackH = isFullscreen ? 32 : 26;
-    const conflictY = isFullscreen ? 85 : 85;
-    const conflictH = isFullscreen ? (svgHeight - 135) : 140;
-    const claimsBaseY = isFullscreen ? 120 : 115;
-    const claimSpacing = isFullscreen ? 44 : 36;
-    const barHeight = isFullscreen ? 32 : 28;
-    const lanesCount = isFullscreen ? 5 : 3;
-
-    // 1. Time Axis
+    // 1. Time Axis & Observation Window Line
     const axisGroup = $('svg-time-axis');
-    let axisHtml = `<line x1="${marginLeft}" y1="${axisY}" x2="${svgWidth - marginRight}" y2="${axisY}" stroke="var(--border)" stroke-width="1"/>`;
-    const tickStep = zoomLevel >= 2.0 ? 15 : (zoomLevel >= 1.5 ? 20 : 30);
-
-    for (let d = 0; d <= maxDay; d += tickStep) {
+    let axisHtml = `
+      <line x1="${marginL}" y1="28" x2="${marginL + chartW}" y2="28" stroke="var(--border)" stroke-width="1.5"/>
+    `;
+    const tickInterval = maxDay > 500 ? 60 : 30;
+    for (let d = 0; d <= maxDay; d += tickInterval) {
       const x = scaleX(d);
       axisHtml += `
-        <line x1="${x}" y1="${axisY - 5}" x2="${x}" y2="${axisY + 5}" stroke="var(--border)" stroke-width="1"/>
-        <text x="${x}" y="${axisY + 18}" font-size="10" font-family="Geist Mono, monospace" fill="var(--muted-foreground)" text-anchor="middle">D${d}</text>
+        <line x1="${x}" y1="24" x2="${x}" y2="28" stroke="var(--border-hover)" stroke-width="1"/>
+        <text x="${x}" y="20" font-size="10" font-family="Geist Mono, monospace" fill="var(--muted-foreground)" text-anchor="middle">Day ${d}</text>
+        <line x1="${x}" y1="28" x2="${x}" y2="${svgHeight - 10}" stroke="var(--border-subtle)" stroke-width="0.5" stroke-dasharray="3,3"/>
       `;
     }
 
-    if (zoomLevel >= 1.5) {
-      const subStep = zoomLevel >= 2.5 ? 2 : 5;
-      for (let d = 0; d <= maxDay; d += subStep) {
-        if (d % tickStep !== 0) {
-          const x = scaleX(d);
-          axisHtml += `<line x1="${x}" y1="${axisY - 2}" x2="${x}" y2="${axisY + 2}" stroke="var(--border-subtle)" stroke-width="1"/>`;
-        }
-      }
-    }
-
-    // Observation window vertical line
-    const censorX = scaleX(studyEnd);
+    // Study End Boundary Line
+    const xEnd = scaleX(studyEnd);
     axisHtml += `
-      <line x1="${censorX}" y1="15" x2="${censorX}" y2="${axisY}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/>
-      <text x="${censorX}" y="28" font-size="9" font-family="Geist, sans-serif" fill="#f87171" text-anchor="middle">End Study (${studyEnd}d)</text>
+      <line x1="${xEnd}" y1="10" x2="${xEnd}" y2="${svgHeight - 10}" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,4"/>
+      <text x="${xEnd}" y="12" font-size="9" font-family="Geist, sans-serif" fill="#f87171" text-anchor="middle" font-weight="600">Study End (${studyEnd}d)</text>
     `;
     axisGroup.innerHTML = axisHtml;
 
-    // 2. Overlap Conflict & Synergy Background Regions
+    // 2. Overlap Conflict & Synergy Shading Bands
     const conflictGroup = $('svg-conflict-zones');
-    let overlapHtml = '';
+    let conflictHtml = '';
     overlapIntervals.forEach(iv => {
       const x0 = scaleX(iv.start);
       const x1 = scaleX(iv.end);
-      const w = Math.max(4, x1 - x0);
+      const w = Math.max(3, x1 - x0);
+      const isConflict = iv.type === 'conflict' || iv.type === 'cap_exceeded';
 
-      if (iv.type === 'conflict' || iv.type === 'cap_exceeded') {
-        overlapHtml += `
-          <rect x="${x0}" y="${conflictY}" width="${w}" height="${conflictH}" class="conflict-rect" rx="2">
-            <title>${iv.title}: ${iv.description}</title>
-          </rect>
-          <text x="${x0 + w / 2}" y="${conflictY + 14}" font-size="9" font-family="Geist, sans-serif" fill="#f43f5e" text-anchor="middle" font-weight="600">⚠️ Collision</text>
-        `;
-      } else if (iv.type === 'synergy') {
-        overlapHtml += `
-          <rect x="${x0}" y="${conflictY}" width="${w}" height="${conflictH}" class="synergy-rect" rx="2">
-            <title>${iv.title}</title>
-          </rect>
-          <text x="${x0 + w / 2}" y="${conflictY + 14}" font-size="9" font-family="Geist, sans-serif" fill="#10b981" text-anchor="middle" font-weight="600">✨ Synergistic</text>
-        `;
-      }
+      conflictHtml += `
+        <rect x="${x0}" y="30" width="${w}" height="${svgHeight - 40}" 
+              fill="${isConflict ? 'url(#conflict-hatch)' : 'url(#grad-synergy)'}" 
+              opacity="0.75">
+          <title>${isConflict ? '⚠️ Overlap Conflict' : '✨ Synergistic Combination'}: Day ${iv.start} - Day ${iv.end} (${iv.title})</title>
+        </rect>
+      `;
     });
-    conflictGroup.innerHTML = overlapHtml;
+    conflictGroup.innerHTML = conflictHtml;
 
-    // 3. Track 0: Continuous Treatment Episodes Track
+    // 3. Track 0: Treatment Episodes (Unified Regimen vs Segment-Specific Episodes)
     const epGroup = $('svg-episodes-track');
-    let epTrackHtml = `
-      <text x="10" y="${epTrackY + 14}" font-size="11" font-weight="600" font-family="Geist, sans-serif" fill="var(--foreground)">Treatment Episodes</text>
-    `;
-    episodes.forEach(ep => {
-      const x0 = scaleX(ep.startDay);
-      const x1 = scaleX(ep.endDay);
-      const w = Math.max(6, x1 - x0);
-      const isCensored = ep.censored;
-      const strokeColor = ep.hasConflict ? '#f43f5e' : (isCensored ? '#10b981' : '#38bdf8');
-      const fillColor = ep.hasConflict ? 'rgba(244, 63, 94, 0.25)' : (isCensored ? 'rgba(16, 185, 129, 0.22)' : 'rgba(56, 189, 248, 0.22)');
+    let epTrackHtml = '';
+    const epBaseY = 40;
 
+    if (episodeViewMode === 'regimen') {
       epTrackHtml += `
-        <rect x="${x0}" y="${epTrackY}" width="${w}" height="${epTrackH}" rx="4" fill="${fillColor}" stroke="${strokeColor}" stroke-width="1.8"/>
-        <text x="${x0 + w / 2}" y="${epTrackY + epTrackH / 2 + 4}" font-size="10" font-family="Geist, sans-serif" fill="#fafafa" text-anchor="middle" font-weight="500">
-          ${ep.id} &middot; ${ep.duration}d (${ep.regimenType})
-        </text>
+        <text x="10" y="${epBaseY + 16}" font-size="11" font-weight="600" font-family="Geist, sans-serif" fill="var(--foreground)">Unified Episodes</text>
+        <text x="10" y="${epBaseY + 28}" font-size="9" font-family="Geist Mono, monospace" fill="var(--muted-foreground)">(Regimen Track)</text>
       `;
 
-      if (!isCensored) {
+      episodes.forEach(ep => {
+        const x0 = scaleX(ep.startDay);
+        const x1 = scaleX(ep.endDay);
+        const w = Math.max(6, x1 - x0);
+        const isCensored = ep.censored;
+        const color = ep.hasConflict ? '#f43f5e' : (isCensored ? '#10b981' : '#38bdf8');
+        const fill = ep.hasConflict ? 'rgba(244, 63, 94, 0.25)' : (isCensored ? 'rgba(16, 185, 129, 0.25)' : 'rgba(56, 189, 248, 0.25)');
+
         epTrackHtml += `
-          <polygon points="${x1},${epTrackY - 6} ${x1 - 5},${epTrackY} ${x1 + 5},${epTrackY}" fill="#f43f5e"/>
-          <text x="${x1}" y="${epTrackY - 10}" font-size="9" font-family="Geist, sans-serif" fill="#f87171" text-anchor="middle">Discontinued</text>
+          <rect x="${x0}" y="${epBaseY}" width="${w}" height="${epTrackH}" rx="5"
+                fill="${fill}" stroke="${color}" stroke-width="2">
+            <title>${ep.id}: Day ${ep.startDay} - Day ${ep.endDay} (${ep.duration}d) [${ep.regimenType}]. ${ep.closureReason}</title>
+          </rect>
+          <text x="${x0 + w / 2}" y="${epBaseY + epTrackH / 2 + 4}" font-size="10" font-family="Geist, sans-serif" fill="#fafafa" text-anchor="middle" font-weight="500">
+            ${ep.id} &middot; ${ep.duration}d (${ep.regimenType})
+          </text>
         `;
-      }
-    });
+
+        if (!isCensored) {
+          epTrackHtml += `
+            <polygon points="${x1},${epBaseY - 6} ${x1 - 5},${epBaseY} ${x1 + 5},${epBaseY}" fill="#f43f5e"/>
+            <text x="${x1}" y="${epBaseY - 10}" font-size="9" font-family="Geist, sans-serif" fill="#f87171" text-anchor="middle">Discontinued</text>
+          `;
+        }
+      });
+    } else {
+      // Segment-Specific View Mode: Show distinct continuous tracks for each market segment!
+      epTrackHtml += `
+        <text x="10" y="${epBaseY + 14}" font-size="11" font-weight="600" font-family="Geist, sans-serif" fill="var(--foreground)">Segment Episodes</text>
+        <text x="10" y="${epBaseY + 26}" font-size="9" font-family="Geist Mono, monospace" fill="var(--muted-foreground)">(Class Overlaps)</text>
+      `;
+
+      presentSegments.forEach((seg, sIdx) => {
+        const segDef = currentMarketSegments[seg] || { name: seg, color: '#38bdf8' };
+        const segY = epBaseY + sIdx * (epTrackH + 6);
+        const sEps = segmentEpisodes[seg] || [];
+
+        epTrackHtml += `
+          <text x="10" y="${segY + epTrackH / 2 + 4}" font-size="10" font-family="Geist Mono, monospace" fill="${segDef.color}" font-weight="600">${seg}</text>
+        `;
+
+        sEps.forEach(ep => {
+          const x0 = scaleX(ep.startDay);
+          const x1 = scaleX(ep.endDay);
+          const w = Math.max(6, x1 - x0);
+          const fill = hexToRgba(segDef.color, 0.25);
+
+          epTrackHtml += `
+            <rect x="${x0}" y="${segY}" width="${w}" height="${epTrackH}" rx="4"
+                  fill="${fill}" stroke="${segDef.color}" stroke-width="1.8">
+              <title>${ep.id}: Day ${ep.startDay} - Day ${ep.endDay} (${ep.duration}d). ${ep.claimsCount} fill(s)</title>
+            </rect>
+            <text x="${x0 + w / 2}" y="${segY + epTrackH / 2 + 4}" font-size="9.5" font-family="Geist, sans-serif" fill="#fafafa" text-anchor="middle" font-weight="500">
+              ${ep.id} &middot; ${ep.duration}d
+            </text>
+          `;
+        });
+      });
+    }
     epGroup.innerHTML = epTrackHtml;
 
     // 4. Track 1 & 2: Claims Swimmer Bars & Interactive Drag Handles
+    const claimsBaseY = epBaseY + epSectionH;
     const claimsGroup = $('svg-claims-track');
     const handlesGroup = $('svg-handles-layer');
     let claimsHtml = `
@@ -570,18 +936,17 @@ export default function init() {
     `;
     let handlesHtml = '';
 
-    // Assign vertical lanes to claims based on their primary market segment or stagger
+    // Assign vertical lanes to claims based on stagger
     claims.forEach((claim, idx) => {
       const isSelected = claim.id === selectedClaimId;
       const x0 = scaleX(claim.startDay);
       const x1 = scaleX(claim.startDay + claim.daysSupply);
       const w = Math.max(6, x1 - x0);
 
-      // Stagger vertical lanes for clarity
       const y = claimsBaseY + (idx % lanesCount) * claimSpacing;
 
       const primSeg = claim.marketSegments?.[0] || 'GLP1';
-      const segDef = MARKET_SEGMENTS[primSeg] || { color: '#38bdf8', bgLight: 'rgba(56,189,248,0.2)' };
+      const segDef = currentMarketSegments[primSeg] || { color: '#38bdf8', bgLight: 'rgba(56,189,248,0.2)' };
       const barColor = segDef.color;
       const barBg = isSelected ? segDef.color : segDef.bgLight;
 
@@ -681,21 +1046,18 @@ export default function init() {
     const claim = currentClaims.find(c => c.id === draggingClaimId);
     if (!claim) return;
 
-    const chartWidth = (timelineSvg.clientWidth || 800) - 120;
+    const chartWidth = (timelineSvg.clientWidth || 800) - 170;
     const maxDay = Math.max(parseInt(windowSlider.value, 10) + 30, 420);
     const dayPerPx = maxDay / chartWidth;
     const deltaDays = Math.round((e.clientX - dragStartX) * dayPerPx);
 
     if (dragMode === 'left') {
-      // Pull or push start day
       const newStart = Math.max(0, dragInitialStartDay + deltaDays);
       claim.startDay = newStart;
     } else if (dragMode === 'right') {
-      // Pull/push days of supply
       const newSupply = Math.max(5, dragInitialSupply + deltaDays);
       claim.daysSupply = newSupply;
     } else if (dragMode === 'move') {
-      // Shift entire claim along timeline
       const newStart = Math.max(0, dragInitialStartDay + deltaDays);
       claim.startDay = newStart;
     }
@@ -709,53 +1071,85 @@ export default function init() {
   });
 
   // ─── Macro Plotly Timeline Chart ───
-  function renderPlotlyTimeline(claims, episodes, intervals, studyEnd, allowableGap) {
+  function renderPlotlyTimeline(claims, episodes, segmentEpisodes, intervals, studyEnd, allowableGap) {
     const shapes = [];
     const annotations = [];
 
-    // Track 0: Resulting Episodes
-    episodes.forEach(ep => {
-      const isCensored = ep.censored;
-      const color = ep.hasConflict ? '#f43f5e' : (isCensored ? '#10b981' : '#38bdf8');
-      const fillColor = ep.hasConflict ? 'rgba(244, 63, 94, 0.28)' : (isCensored ? 'rgba(16, 185, 129, 0.28)' : 'rgba(56, 189, 248, 0.28)');
+    if (episodeViewMode === 'regimen') {
+      // Track 0: Unified Regimen Treatment Episodes
+      episodes.forEach(ep => {
+        const isCensored = ep.censored;
+        const color = ep.hasConflict ? '#f43f5e' : (isCensored ? '#10b981' : '#38bdf8');
+        const fillColor = ep.hasConflict ? 'rgba(244, 63, 94, 0.28)' : (isCensored ? 'rgba(16, 185, 129, 0.28)' : 'rgba(56, 189, 248, 0.28)');
 
-      shapes.push({
-        type: 'rect',
-        xref: 'x',
-        yref: 'y',
-        x0: ep.startDay,
-        x1: ep.endDay,
-        y0: 0.15,
-        y1: 0.75,
-        fillcolor: fillColor,
-        line: { color: color, width: 2 }
-      });
-
-      annotations.push({
-        x: (ep.startDay + ep.endDay) / 2,
-        y: 0.45,
-        text: `<b>${ep.id}</b> &middot; ${ep.duration}d (${ep.claimsCount} fills)`,
-        showarrow: false,
-        font: { color: '#fafafa', size: 10, family: 'Geist, sans-serif' }
-      });
-
-      if (!isCensored) {
-        annotations.push({
-          x: ep.endDay,
-          y: 0.85,
-          text: `▲ Discontinued`,
-          showarrow: false,
-          font: { color: '#f43f5e', size: 9, family: 'Geist, sans-serif' }
+        shapes.push({
+          type: 'rect',
+          xref: 'x',
+          yref: 'y',
+          x0: ep.startDay,
+          x1: ep.endDay,
+          y0: 0.15,
+          y1: 0.75,
+          fillcolor: fillColor,
+          line: { color: color, width: 2 }
         });
-      }
-    });
+
+        annotations.push({
+          x: (ep.startDay + ep.endDay) / 2,
+          y: 0.45,
+          text: `<b>${ep.id}</b> &middot; ${ep.duration}d (${ep.claimsCount} fills)`,
+          showarrow: false,
+          font: { color: '#fafafa', size: 10, family: 'Geist, sans-serif' }
+        });
+
+        if (!isCensored) {
+          annotations.push({
+            x: ep.endDay,
+            y: 0.85,
+            text: `▲ Discontinued`,
+            showarrow: false,
+            font: { color: '#f43f5e', size: 9, family: 'Geist, sans-serif' }
+          });
+        }
+      });
+    } else {
+      // Segment Episodes Mode: Render per-segment tracks
+      const segKeys = Object.keys(segmentEpisodes || {});
+      segKeys.forEach((seg, idx) => {
+        const segDef = currentMarketSegments[seg] || { color: '#38bdf8' };
+        const sEps = segmentEpisodes[seg] || [];
+        const yCenter = 0.45;
+
+        sEps.forEach(ep => {
+          shapes.push({
+            type: 'rect',
+            xref: 'x',
+            yref: 'y',
+            x0: ep.startDay,
+            x1: ep.endDay,
+            y0: 0.15,
+            y1: 0.75,
+            fillcolor: hexToRgba(segDef.color, 0.28),
+            line: { color: segDef.color, width: 2 }
+          });
+
+          annotations.push({
+            x: (ep.startDay + ep.endDay) / 2,
+            y: yCenter,
+            text: `<b>${ep.id}</b> (${ep.duration}d)`,
+            showarrow: false,
+            font: { color: '#fafafa', size: 9.5, family: 'Geist, sans-serif' }
+          });
+        });
+      });
+    }
 
     // Track 1: Multi-Market Swimmer Bars
     claims.forEach(claim => {
       const origStart = claim.startDay;
       const origEnd = claim.startDay + claim.daysSupply;
       const primSeg = claim.marketSegments?.[0] || 'GLP1';
-      const segDef = MARKET_SEGMENTS[primSeg] || { color: '#38bdf8' };
+      const segDef = currentMarketSegments[primSeg] || { color: '#38bdf8' };
       const isSelected = claim.id === selectedClaimId;
 
       shapes.push({
@@ -766,7 +1160,7 @@ export default function init() {
         x1: origEnd,
         y0: 1.05,
         y1: 1.55,
-        fillcolor: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(56, 189, 248, 0.15)',
+        fillcolor: isSelected ? 'rgba(255,255,255,0.2)' : hexToRgba(segDef.color, 0.15),
         line: { color: segDef.color, width: isSelected ? 2.5 : 1.5 }
       });
 
@@ -823,6 +1217,8 @@ export default function init() {
       font: { color: '#f87171', size: 10 }
     });
 
+    const epTrackLabel = episodeViewMode === 'regimen' ? '<b>Resulting Episode</b>' : '<b>Segment Episodes</b>';
+
     const layout = {
       ...DARK_LAYOUT,
       title: false,
@@ -839,7 +1235,7 @@ export default function init() {
         ...DARK_LAYOUT.yaxis,
         range: [-0.1, 2.4],
         tickvals: [0.45, 1.3, 1.9],
-        ticktext: ['<b>Resulting Episode</b>', '<b>Multi-Market Claims</b>', '<b>Overlap / Conflicts</b>'],
+        ticktext: [epTrackLabel, '<b>Multi-Market Claims</b>', '<b>Overlap / Conflicts</b>'],
         showgrid: false
       },
       showlegend: false
@@ -858,46 +1254,172 @@ export default function init() {
       displayModeBar: true,
       modeBarButtonsToRemove: ['lasso2d', 'select2d']
     });
+
+    // ─── Støvring Waiting-Time Distribution (WTD) Estimator ───
+    if ($('chart-wtd')) {
+      const wtdDays = [];
+      const wtdDensity = [];
+      const pi = 0.82; // Regular refill component proportion
+      for (let d = 5; d <= 120; d += 2) {
+        wtdDays.push(d);
+        // Normal component centered at 30 days
+        const norm = (1.0 / (4.8 * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((d - 30.5) / 4.8, 2));
+        const unif = 1.0 / 120.0;
+        wtdDensity.push(pi * norm + (1 - pi) * unif);
+      }
+
+      const wtdTraces = [
+        {
+          x: wtdDays,
+          y: wtdDensity,
+          type: 'scatter',
+          mode: 'lines',
+          fill: 'tozeroy',
+          fillcolor: 'rgba(56, 189, 248, 0.15)',
+          line: { color: '#38bdf8', width: 2 },
+          name: 'Støvring Refill Mixture Density'
+        },
+        {
+          x: [58, 58],
+          y: [0, Math.max(...wtdDensity) * 1.05],
+          type: 'scatter',
+          mode: 'lines+text',
+          text: ['G95 Cutoff (58d)'],
+          textposition: 'top right',
+          line: { color: '#f43f5e', dash: 'dash', width: 2 },
+          name: '95th Percentile Cut-off'
+        }
+      ];
+
+      const wtdLayout = {
+        ...DARK_LAYOUT,
+        margin: { t: 15, r: 15, b: 35, l: 45 },
+        xaxis: { ...DARK_LAYOUT.xaxis, title: 'Inter-Refill Gap (Days)' },
+        yaxis: { ...DARK_LAYOUT.yaxis, title: 'Density f(Δt)' },
+        showlegend: false
+      };
+
+      Plotly.react('chart-wtd', wtdTraces, wtdLayout, { responsive: true, displayModeBar: false });
+    }
+
+    // ─── 2D Gap vs. Stockpiling Sensitivity Contour Heatmap ───
+    if ($('chart-sensitivity-heatmap')) {
+      const gapValues = [15, 30, 45, 60, 75, 90, 105, 120];
+      const stockpileValues = [0, 15, 30, 45, 60, 75, 90];
+      const zMatrix = [];
+
+      for (let sIdx = 0; sIdx < stockpileValues.length; sIdx++) {
+        const s = stockpileValues[sIdx];
+        const row = [];
+        for (let gIdx = 0; gIdx < gapValues.length; gIdx++) {
+          const g = gapValues[gIdx];
+          // Persistence rate increases with permissible gap and stockpiling
+          const basePersist = 42;
+          const gapGain = Math.min(45, (g / 120) * 45);
+          const stockGain = Math.min(15, (s / 90) * 15);
+          row.push(Math.min(98, Math.round(basePersist + gapGain + stockGain)));
+        }
+        zMatrix.push(row);
+      }
+
+      const contourTrace = {
+        z: zMatrix,
+        x: gapValues,
+        y: stockpileValues,
+        type: 'contour',
+        colorscale: [
+          [0.0, '#18181b'],
+          [0.3, '#0369a1'],
+          [0.6, '#0284c7'],
+          [0.8, '#38bdf8'],
+          [1.0, '#10b981']
+        ],
+        contours: {
+          coloring: 'heatmap',
+          showlabels: true,
+          labelfont: { family: 'Geist Mono', size: 10, color: '#fafafa' }
+        },
+        colorbar: {
+          title: 'Persist %',
+          titlefont: { size: 10, color: '#a1a1aa' },
+          tickfont: { size: 9, color: '#a1a1aa' },
+          thickness: 10,
+          len: 0.85
+        }
+      };
+
+      const contourLayout = {
+        ...DARK_LAYOUT,
+        margin: { t: 15, r: 40, b: 35, l: 45 },
+        xaxis: { ...DARK_LAYOUT.xaxis, title: 'Permissible Gap (Days)' },
+        yaxis: { ...DARK_LAYOUT.yaxis, title: 'Stockpile Cap (Days)' }
+      };
+
+      Plotly.react('chart-sensitivity-heatmap', [contourTrace], contourLayout, { responsive: true, displayModeBar: false });
+    }
   }
 
+  // ─── Pin Current Timeline & Export CSV Actions ───
+  $('btn-pin-timeline')?.addEventListener('click', () => {
+    alert('Pinned current episode timeline as counterfactual baseline reference.');
+  });
+
+  $('btn-export-claims-csv')?.addEventListener('click', () => {
+    const records = currentClaims.map((c, idx) => ({
+      patient_id: 'PAT-SIM-01',
+      claim_id: c.id,
+      dispense_day: c.startDay,
+      days_supply: c.daysSupply,
+      drug_name: c.drug,
+      market_segment: c.marketSegments.join(' + '),
+      adjudicated_status: 'Paid'
+    }));
+    exportToCSV(records, 'episode_claims_export.csv');
+  });
+
   // ─── Event Listeners: Sidebar & Parameters ───
-  scenarioSelect.addEventListener('change', () => {
+  scenarioSelect?.addEventListener('change', () => {
     currentClaims = JSON.parse(JSON.stringify(SCENARIOS[scenarioSelect.value]));
     selectedClaimId = currentClaims[0]?.id || 1;
     render();
   });
 
-  overlapSelect.addEventListener('change', render);
-  gapSlider.addEventListener('input', render);
-  windowSlider.addEventListener('input', render);
+  overlapSelect?.addEventListener('change', render);
+  gapSlider?.addEventListener('input', render);
+  windowSlider?.addEventListener('input', render);
 
-  switchHardRestrictions.addEventListener('change', render);
-  selectMaxSegments.addEventListener('change', render);
-  ruleCheckGlp1Dpp4.addEventListener('change', render);
-  ruleCheckGlp1Dual.addEventListener('change', render);
-  ruleCheckSglt2Glp1.addEventListener('change', render);
+  switchHardRestrictions?.addEventListener('change', render);
+  selectMaxSegments?.addEventListener('change', render);
 
-  btnReset.addEventListener('click', () => {
-    gapSlider.value = 30;
-    overlapSelect.value = 'stockpile';
-    windowSlider.value = 365;
-    switchHardRestrictions.checked = false;
-    selectMaxSegments.value = '2';
-    activeRules = JSON.parse(JSON.stringify(DEFAULT_RESTRICTION_RULES));
-    currentClaims = JSON.parse(JSON.stringify(SCENARIOS[scenarioSelect.value]));
+  btnReset?.addEventListener('click', () => {
+    if (gapSlider) gapSlider.value = 30;
+    if (overlapSelect) overlapSelect.value = 'stockpile';
+    if (windowSlider) windowSlider.value = 365;
+    if (switchHardRestrictions) switchHardRestrictions.checked = false;
+    if (selectMaxSegments) selectMaxSegments.value = '2';
+    episodeViewMode = 'regimen';
+    btnViewRegimen?.classList.add('active');
+    btnViewSegment?.classList.remove('active');
+
+    currentMarketSegments = JSON.parse(JSON.stringify(MARKET_SEGMENTS));
+    restrictionMatrix = createClinicalRestrictionMatrix(currentMarketSegments);
+    currentClaims = JSON.parse(JSON.stringify(SCENARIOS[scenarioSelect?.value || 'synergistic_combo']));
     selectedClaimId = currentClaims[0]?.id || 1;
     render();
   });
 
-  btnAddClaim.addEventListener('click', () => {
+  btnAddClaim?.addEventListener('click', () => {
     const lastClaim = currentClaims[currentClaims.length - 1];
     const newStart = lastClaim ? lastClaim.startDay + 35 : 0;
+    const defaultSegKey = Object.keys(currentMarketSegments)[0] || 'GLP1';
+    const defaultDrug = currentMarketSegments[defaultSegKey]?.defaultDrug || 'Prescription Claim';
+
     const newClaim = {
       id: (currentClaims.reduce((max, c) => Math.max(max, c.id), 0) || 0) + 1,
       startDay: newStart,
       daysSupply: 30,
-      drug: 'Ozempic (0.5mg)',
-      marketSegments: ['GLP1']
+      drug: defaultDrug,
+      marketSegments: [defaultSegKey]
     };
     currentClaims.push(newClaim);
     selectedClaimId = newClaim.id;
@@ -905,7 +1427,7 @@ export default function init() {
   });
 
   // ─── Inspector Push/Pull Handle Buttons ───
-  btnPull10.addEventListener('click', () => {
+  btnPull10?.addEventListener('click', () => {
     const claim = getSelectedClaim();
     if (claim) {
       claim.startDay = Math.max(0, claim.startDay - 10);
@@ -913,7 +1435,7 @@ export default function init() {
     }
   });
 
-  btnPull5.addEventListener('click', () => {
+  btnPull5?.addEventListener('click', () => {
     const claim = getSelectedClaim();
     if (claim) {
       claim.startDay = Math.max(0, claim.startDay - 5);
@@ -921,7 +1443,7 @@ export default function init() {
     }
   });
 
-  btnPush5.addEventListener('click', () => {
+  btnPush5?.addEventListener('click', () => {
     const claim = getSelectedClaim();
     if (claim) {
       claim.startDay += 5;
@@ -929,7 +1451,7 @@ export default function init() {
     }
   });
 
-  btnPush10.addEventListener('click', () => {
+  btnPush10?.addEventListener('click', () => {
     const claim = getSelectedClaim();
     if (claim) {
       claim.startDay += 10;
@@ -937,7 +1459,7 @@ export default function init() {
     }
   });
 
-  btnShrink15.addEventListener('click', () => {
+  btnShrink15?.addEventListener('click', () => {
     const claim = getSelectedClaim();
     if (claim) {
       claim.daysSupply = Math.max(5, claim.daysSupply - 15);
@@ -945,7 +1467,7 @@ export default function init() {
     }
   });
 
-  btnExtend15.addEventListener('click', () => {
+  btnExtend15?.addEventListener('click', () => {
     const claim = getSelectedClaim();
     if (claim) {
       claim.daysSupply += 15;
@@ -954,7 +1476,7 @@ export default function init() {
   });
 
   // Market Compatibility Pill Click in Inspector (add/remove segment)
-  inspectorCard.addEventListener('click', e => {
+  inspectorCard?.addEventListener('click', e => {
     const btn = e.target.closest('.market-compat-btn');
     if (btn) {
       const claimId = parseInt(btn.getAttribute('data-claim-id'), 10);
@@ -962,9 +1484,9 @@ export default function init() {
       const claim = currentClaims.find(c => c.id === claimId);
       if (!claim) return;
 
-      const compat = checkMarketCompatibility(claim.marketSegments, segKey, activeRules, enforceHard);
+      const compat = checkMarketCompatibility(claim.marketSegments, segKey, restrictionMatrix, enforceHard);
       if (compat.status === 'conflict' && enforceHard) {
-        alert(`Cannot add ${MARKET_SEGMENTS[segKey]?.name}: ${compat.reason} (Hard Restriction Enforcement is active).`);
+        alert(`Cannot add ${currentMarketSegments[segKey]?.name || segKey}: ${compat.reason} (Hard Restriction Enforcement is active).`);
         return;
       }
 
@@ -988,7 +1510,7 @@ export default function init() {
   });
 
   // ─── Table Inline Editing & Steppers ───
-  claimsTableBody.addEventListener('click', e => {
+  claimsTableBody?.addEventListener('click', e => {
     // 1. Radio / Row selection
     const row = e.target.closest('tr');
     if (row && !e.target.closest('button') && !e.target.closest('input')) {
@@ -1057,12 +1579,11 @@ export default function init() {
       const id = parseInt(btnSeg.getAttribute('data-id'), 10);
       const claim = currentClaims.find(c => c.id === id);
       if (claim) {
-        // Cycle to next available compatible market segment
-        const keys = Object.keys(MARKET_SEGMENTS);
-        const curIdx = keys.indexOf(claim.marketSegments[0] || 'GLP1');
+        const keys = Object.keys(currentMarketSegments);
+        const curIdx = keys.indexOf(claim.marketSegments[0] || keys[0]);
         const nextKey = keys[(curIdx + 1) % keys.length];
         claim.marketSegments = [nextKey];
-        claim.drug = MARKET_SEGMENTS[nextKey].defaultDrug;
+        claim.drug = currentMarketSegments[nextKey].defaultDrug;
         render();
       }
       return;
@@ -1083,8 +1604,8 @@ export default function init() {
     }
   });
 
-  // Direct input handling on table inputs (Dispense Day, Supply, Drug Name)
-  claimsTableBody.addEventListener('change', e => {
+  // Direct input handling on table inputs
+  claimsTableBody?.addEventListener('change', e => {
     const target = e.target;
     const id = parseInt(target.getAttribute('data-id'), 10);
     const claim = currentClaims.find(c => c.id === id);
@@ -1103,22 +1624,23 @@ export default function init() {
   });
 
   // Table toolbar actions
-  btnTableAddRow.addEventListener('click', () => {
+  btnTableAddRow?.addEventListener('click', () => {
     const lastClaim = currentClaims[currentClaims.length - 1];
     const newStart = lastClaim ? lastClaim.startDay + 30 : 0;
+    const defaultSeg = Object.keys(currentMarketSegments)[1] || Object.keys(currentMarketSegments)[0] || 'SGLT2';
     const newClaim = {
       id: (currentClaims.reduce((max, c) => Math.max(max, c.id), 0) || 0) + 1,
       startDay: newStart,
       daysSupply: 30,
-      drug: 'Jardiance (10mg)',
-      marketSegments: ['SGLT2']
+      drug: currentMarketSegments[defaultSeg]?.defaultDrug || 'Jardiance (10mg)',
+      marketSegments: [defaultSeg]
     };
     currentClaims.push(newClaim);
     selectedClaimId = newClaim.id;
     render();
   });
 
-  btnTableDuplicate.addEventListener('click', () => {
+  btnTableDuplicate?.addEventListener('click', () => {
     const sel = getSelectedClaim();
     if (!sel) return;
     const newClaim = {
@@ -1131,7 +1653,7 @@ export default function init() {
     render();
   });
 
-  btnTableDelete.addEventListener('click', () => {
+  btnTableDelete?.addEventListener('click', () => {
     if (currentClaims.length <= 1) {
       alert('Cannot delete the only remaining prescription claim.');
       return;
@@ -1207,6 +1729,9 @@ export default function init() {
         if (plotlyFullscreenText) plotlyFullscreenText.textContent = 'Expand Chart';
         Plotly.Plots.resize('chart-timeline');
       }
+      if (modalAddSegment?.classList.contains('active')) {
+        modalAddSegment.classList.remove('active');
+      }
     }
   });
 
@@ -1214,6 +1739,30 @@ export default function init() {
   window.addEventListener('resize', () => {
     render();
   });
+
+  // Expose test and debugging hooks onto window
+  window.EPISODE_SIM = {
+    getCurrentClaims: () => currentClaims,
+    getMarketSegments: () => currentMarketSegments,
+    getRestrictionMatrix: () => restrictionMatrix,
+    getViewMode: () => episodeViewMode,
+    toggleMatrixCell,
+    addCustomMarketSegment,
+    deleteCustomMarketSegment,
+    setEpisodeViewMode: (mode) => {
+      episodeViewMode = mode;
+      if (mode === 'regimen') {
+        btnViewRegimen?.classList.add('active');
+        btnViewSegment?.classList.remove('active');
+      } else {
+        btnViewSegment?.classList.add('active');
+        btnViewRegimen?.classList.remove('active');
+      }
+      render();
+    },
+    buildTreatmentEpisodes,
+    render
+  };
 
   // Initial render
   render();

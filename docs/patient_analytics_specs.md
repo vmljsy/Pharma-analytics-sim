@@ -129,3 +129,75 @@ Projected market share vector after $k$ cycles:
 
 $$\mathbf{s}_k = \mathbf{s}_0 \mathbf{P}^k$$
 
+---
+
+## 7. HCP Prescriber Concentration, Lorenz Curves & Sales Force Effectiveness (SFE)
+
+### 7.1 Prescriber Volume Skew & Lorenz Formulation
+Let $N$ prescribers (HCPs) be sorted monotonically by total prescription volume (TRx/NRx):
+
+$$y_1 \le y_2 \le \dots \le y_N, \qquad Y_k = \sum_{i=1}^k y_i, \qquad Y_N = \sum_{i=1}^N y_i$$
+
+The cumulative physician proportion is $p_k = \frac{k}{N}$, and the cumulative volume proportion is $L(p_k) = \frac{Y_k}{Y_N}$.
+
+### 7.2 Gini Coefficient Calculation
+The Gini coefficient measures prescribing concentration relative to perfect equality ($L(p) = p$):
+
+$$G = 1 - 2 \int_0^1 L(p) \, dp = \frac{\sum_{i=1}^N (2i - N - 1) y_i}{N \sum_{i=1}^N y_i}$$
+
+In specialty therapeutics (Oncology, Immunology, Rare Disease), $G \in [0.70, 0.90]$, reflecting high volume concentration where the top $15\%\text{--}20\%$ of physicians generate $\ge 80\%$ of volume.
+
+### 7.3 Decile / Quintile Segmentation
+Prescribers are categorized into $K$ quantiles (Deciles $D_{1\dots10}$ or Quintiles $Q_{1\dots5}$):
+
+- **Count Deciles:** Each bin contains $\frac{N}{10}$ physicians ranked by volume.
+- **Volume Deciles (IQVIA Standard):** Each bin accounts for $\approx 10\%$ of total market TRx.
+- **Detailing Allocation:**
+  $$\text{Target Demand (Calls/Mo)} = \sum_{d \ge d_{\text{cutoff}}} N_d \times \text{Frequency}_d \times \text{Reach}_d$$
+  $$\text{Required FTEs} = \frac{\text{Target Demand}}{\text{Rep Call Capacity (e.g. 110 calls/month)}}$$
+
+### 7.4 Territory & Regional Alignment
+Field representatives are balanced across geographic regions ($r \in \{\text{NE}, \text{SE}, \text{MW}, \text{SW}, \text{W}\}$):
+
+$$\text{Coverage}_r = \min\left(100\%, \; \frac{\text{Reps}_r \times \text{Capacity}}{\text{Call Demand}_r} \times 100\%\right)$$
+
+---
+
+## 8. Patient Demographics, Payer Mix & Charlson Comorbidity Index (CCI)
+
+### 8.1 Age-Sex Distribution & Medicare Age 65 Transition
+Longitudinal claims cohorts exhibit distinct insurance channel eligibility cliffs. At age $t = 65$, patient coverage shifts discontinuously from Commercial / Employer-sponsored plans to Medicare Advantage (Part C) or Fee-for-Service Medicare (Parts A, B, and D):
+
+$$\text{Payer}(t) = \begin{cases}
+\text{Commercial (70\%) } \mid \text{Medicaid (20\%) } \mid \text{Cash/VA (10\%)}, & t < 65 \\
+\text{Medicare Advantage (52\%) } \mid \text{Medicare FFS (40\%) } \mid \text{Dual (8\%)}, & t \ge 65
+\end{cases}$$
+
+### 8.2 Charlson Comorbidity Index (CCI) Scoring
+Comorbid burden is quantified via standard clinical weights $w_k$:
+
+$$\text{CCI} = \sum_{k=1}^K w_k \cdot x_k$$
+
+Where:
+- $w = 1$: Myocardial Infarction, Congestive Heart Failure, Peripheral Vascular Disease, Cerebrovascular Disease, Dementia, COPD, Rheumatologic Disease, Uncomplicated Diabetes.
+- $w = 2$: Hemiplegia, Moderate/Severe Chronic Kidney Disease (CKD), Complicated Diabetes with end-organ damage, Solid Tumor Malignancy, Leukemia/Lymphoma.
+- $w = 3$: Moderate to Severe Liver Disease.
+- $w = 6$: Metastatic Solid Tumor, AIDS/HIV.
+
+### 8.3 Comorbidity Co-occurrence & Clustering
+Pairwise joint prevalence and Jaccard similarity index:
+
+$$J(C_i, C_j) = \frac{|C_i \cap C_j|}{|C_i \cup C_j|}$$
+
+Cardiorenal-metabolic conditions (Type 2 Diabetes, Hypertension, Dyslipidemia, Chronic Kidney Disease, and Heart Failure) exhibit high phenotypic clustering ($J > 0.35$).
+
+### 8.4 Risk Quintile Stratification & Adherence Penalty
+Patients are stratified into Risk Quintiles ($Q_1: \text{CCI}=0, \; Q_2: \text{CCI}=1, \; Q_3: \text{CCI}=2, \; Q_4: \text{CCI}=3\text{--}4, \; Q_5: \text{CCI} \ge 5$).
+
+Polypharmacy and multimorbidity impose an empirical adherence penalty:
+
+$$\text{PDC}(Q) = \text{PDC}_0 - \beta \cdot \overline{\text{CCI}}_Q + \epsilon$$
+
+With higher risk quintiles demonstrating elevated treatment discontinuation rates and exponential increases in 12-month inpatient hospitalization hazard.
+
+

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open-Network Censoring &amp; Eligibility Proxy — rx.sim</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z'/><path d='m8.5 8.5 7 7'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container nav-container">
+            <a href="../../index.html" class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+                    <path d="m8.5 8.5 7 7"/>
+                </svg>
+                <span class="brand-name">rx<span class="brand-dot">.</span>sim</span>
+            </a>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="breadcrumb" style="margin-bottom: 0;">
+                    <a href="../../index.html">Home</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <a href="../../index.html#modules">Modules</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <span class="breadcrumb-current">Open-Network Censoring</span>
+                </div>
+                <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer" class="nav-link" style="font-size: 0.8125rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Profile</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <!-- 1. Header -->
+        <header class="experiment-header">
+            <div class="hero-pill" style="margin-bottom: 1rem;">
+                <span class="hero-pill-indicator"></span>
+                <span>RWD Epistemology &middot; Open vs Closed Pharmacy Networks</span>
+            </div>
+            <h1>Open-Network Censoring &amp; Eligibility Proxy</h1>
+            <p class="subtitle">Demonstrate how open commercial LRX claims networks lose visibility to non-reporting pharmacies, introducing artificial downward persistence bias that requires pharmacy activity floors to correct</p>
+        </header>
+
+        <!-- 2. Theory Section -->
+        <div class="theory-box">
+            <h3>The Open-Network Surveillance Dilemma</h3>
+            <p>
+                In closed-payer data (e.g., Medicare FFS, MarketScan Commercial), insurance enrollment tables explicitly identify when a patient leaves the plan. In syndicated open-switch claims (IQVIA LRX, Symphony), there are no enrollment rosters:
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 1rem;">
+                <div style="padding: 1rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #f43f5e;">
+                    <strong style="color: #f43f5e; font-size: 0.875rem;">1. Naive Open-Network Blindness</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.8125rem;">
+                        $$\text{Rx Absence} \ne \text{Clinical Discontinuation}$$
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                        When a patient switches to a non-reporting specialty pharmacy, mail-order provider, or hospital 340B dispensary, claims abruptly vanish. Naive models classify this as drug abandonment, creating severe downward bias in Kaplan-Meier curves.
+                    </p>
+                </div>
+                <div style="padding: 1rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #10b981;">
+                    <strong style="color: #10b981; font-size: 0.875rem;">2. Pharmacy Activity Floor Proxy</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.8125rem;">
+                        $$\mathbb{I}(\text{Active at } t) = \mathbb{I}\left(\exists \, \text{Claim of any class in } [t - W_{\text{pre}}, t + W_{\text{post}}]\right)$$
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                        <strong>Activity Filtering:</strong> By requiring ongoing baseline prescription activity in unrelated chronic maintenance classes (e.g., statins, antihypertensives), we censor lost patients rather than falsely marking them as therapy failures.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Interactive Workbench -->
+        <section class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                <h2>Interactive Network Censoring Workbench</h2>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button id="btn-pin-curve" class="btn btn-secondary btn-sm">📌 Pin Current Survival Curve</button>
+                    <button id="btn-export-csv" class="btn btn-secondary btn-sm">📥 Download Cohort CSV</button>
+                    <span class="badge badge-emerald" id="network-badge">Activity Floor Active</span>
+                </div>
+            </div>
+
+            <div class="sim-layout">
+
+                <!-- Sidebar Parameter Controls -->
+                <aside class="sim-sidebar">
+
+                    <div class="controls-panel" style="margin-bottom: 0;">
+                        <div class="controls-panel-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                            <span>Network &amp; Censoring Controls</span>
+                        </div>
+
+                        <!-- Pharmacy Network Leakage Rate -->
+                        <div class="control-group">
+                            <label for="leakage-slider">
+                                <span>Network Leakage / Non-Reporting Rate</span>
+                                <span class="control-value" id="leakage-val">25%</span>
+                            </label>
+                            <input type="range" id="leakage-slider" min="5" max="50" value="25" step="5">
+                            <span class="control-hint">Patients diverted to non-reporting specialty/mail dispensaries</span>
+                        </div>
+
+                        <!-- Activity Floor Window -->
+                        <div class="control-group">
+                            <label for="floor-window-slider">
+                                <span>Activity Floor Window ($W_{\text{floor}}$)</span>
+                                <span class="control-value" id="floor-window-val">90 days</span>
+                            </label>
+                            <input type="range" id="floor-window-slider" min="30" max="180" value="90" step="15">
+                            <span class="control-hint">Max gap in non-target claims before patient is censored</span>
+                        </div>
+
+                        <!-- Cohort Size -->
+                        <div class="control-group">
+                            <label for="cohort-size-slider">
+                                <span>Simulated Cohort Size ($N$)</span>
+                                <span class="control-value" id="cohort-size-val">1,500</span>
+                            </label>
+                            <input type="range" id="cohort-size-slider" min="500" max="3000" value="1500" step="250">
+                        </div>
+
+                        <!-- Toggles -->
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle);">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; cursor: pointer;">
+                                <input type="checkbox" id="check-show-truth" checked>
+                                <span>Show True Underlying Closed Survival</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; cursor: pointer;">
+                                <input type="checkbox" id="check-show-naive" checked>
+                                <span>Show Naive Open-Network Curve (Biased)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; cursor: pointer;">
+                                <input type="checkbox" id="check-show-floor" checked>
+                                <span>Show Activity Floor Reconstructed Curve</span>
+                            </label>
+                        </div>
+
+                    </div>
+
+                    <!-- Direct Metrics Scorecard -->
+                    <div class="stats-card">
+                        <div class="stat-row">
+                            <span class="stat-label">True 12M Persistence</span>
+                            <span class="stat-value" id="stat-true-12m" style="color: #10b981; font-weight: 700;">52.4%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Naive Open 12M Persistence</span>
+                            <span class="stat-value" id="stat-naive-12m" style="color: #f43f5e; font-weight: 700;">31.2%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Activity Floor Reconstructed</span>
+                            <span class="stat-value" id="stat-floor-12m" style="color: #38bdf8; font-weight: 700;">49.8%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Artificial Downward Bias</span>
+                            <span class="stat-value" id="stat-downward-bias" style="color: #f43f5e;">-21.2%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Bias Recovery by Activity Floor</span>
+                            <span class="stat-value" id="stat-bias-recovery" style="color: #10b981;">87.7%</span>
+                        </div>
+                    </div>
+
+                </aside>
+
+                <!-- Main Visualization Area -->
+                <div class="sim-main">
+
+                    <!-- Plotly Survival Curves -->
+                    <div class="chart-container">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0 0.5rem;">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground);">
+                                Kaplan-Meier Persistence: True vs Naive Open-Network vs Activity Floor Adjusted
+                            </h4>
+                            <span style="font-size: 0.75rem; color: var(--muted-foreground);">
+                                Shaded area represents artificial network attrition bias
+                            </span>
+                        </div>
+                        <div id="chart-censoring-km" style="width: 100%; height: 350px;"></div>
+                    </div>
+
+                    <!-- Open Network Claim Visibility Timeline Inspector -->
+                    <div class="chart-container" style="margin-top: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0 0.5rem;">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground);">
+                                Claims Stream Architecture: Target Drug vs Non-Target Activity Floor
+                            </h4>
+                            <span style="font-size: 0.75rem; color: var(--muted-foreground);">
+                                Green = Active claim in network; Red = Missing due to unlinked pharmacy
+                            </span>
+                        </div>
+                        <div id="chart-claim-streams" style="width: 100%; height: 260px;"></div>
+                    </div>
+
+                    <!-- Callout Insight -->
+                    <div class="callout-insight" id="censoring-callout" style="margin-top: 1rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <div id="censoring-callout-text">
+                            Analyzing open network censoring bias...
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>rx.sim &middot; Longitudinal Patient Analytics &middot; <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer">Vimal Joshy</a></p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script type="module">
+        import init from './simulation.js';
+        init();
+        if (window.renderMathInElement) {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false }
+                ]
+            });
+        }
+    </script>
+</body>
+</html>
+

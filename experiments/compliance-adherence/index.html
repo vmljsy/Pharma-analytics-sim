@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compliance &amp; Adherence: PDC vs MPR — rx.sim</title>
+    <title>Compliance &amp; Adherence: PDC, MPR &amp; GBTM Trajectories — rx.sim</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z'/><path d='m8.5 8.5 7 7'/></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,9 +27,9 @@
                 <div class="breadcrumb" style="margin-bottom: 0;">
                     <a href="../../index.html">Home</a>
                     <span class="breadcrumb-sep">/</span>
-                    <a href="../../index.html#experiments">Modules</a>
+                    <a href="../../index.html#modules">Modules</a>
                     <span class="breadcrumb-sep">/</span>
-                    <span class="breadcrumb-current">Compliance: PDC vs MPR</span>
+                    <span class="breadcrumb-current">Compliance: PDC, MPR &amp; GBTM</span>
                 </div>
                 <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer" class="nav-link" style="font-size: 0.8125rem;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -45,35 +45,35 @@
         <header class="experiment-header">
             <div class="hero-pill" style="margin-bottom: 1rem;">
                 <span class="hero-pill-indicator"></span>
-                <span>Pharmacy Quality Alliance (PQA) &middot; Adherence Analytics</span>
+                <span>PQA &middot; ISPOR &middot; Advanced Adherence &amp; Trajectory Modeling</span>
             </div>
-            <h1>Compliance &amp; Adherence: PDC vs MPR</h1>
-            <p class="subtitle">Why CMS and Medicare Star Ratings standardized on Proportion of Days Covered (PDC) over Medication Possession Ratio (MPR) to eliminate early-refill distortion</p>
+            <h1>Compliance &amp; Adherence: PDC, MPR &amp; GBTM Trajectories</h1>
+            <p class="subtitle">Evaluate Proportion of Days Covered (PDC), CMA7 vs CMA8 carryover taxonomy, Group-Based Trajectory Modeling (GBTM) latent clusters, and out-of-pocket copay abandonment elasticity</p>
         </header>
 
         <!-- 2. Theory Section -->
         <div class="theory-box">
-            <h3>PDC vs MPR: The Mathematical Distinction</h3>
+            <h3>PDC vs MPR, CMA Taxonomy &amp; Latent Trajectory Clusters</h3>
             <p>
-                Measuring real-world medication adherence is critical for clinical outcomes and CMS star ratings. Two primary metrics exist in health informatics:
+                Adherence analytics encompass both single-patient dispensary bitmasks and longitudinal population mixture models.
             </p>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 1rem;">
                 <div style="padding: 1rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #f59e0b;">
-                    <strong style="color: #f59e0b; font-size: 0.875rem;">Medication Possession Ratio (MPR)</strong>
+                    <strong style="color: #f59e0b; font-size: 0.875rem;">PDC (PQA Standard) vs CMA Taxonomy</strong>
                     <p style="margin-top: 0.5rem; font-size: 0.8125rem;">
-                        $$\text{MPR} = \frac{\sum_{i=1}^k \text{Days of Supply}_i}{\text{Observation Period (Days)}} \times 100\%$$
+                        $$\text{PDC} = \frac{\sum_{t=1}^T \mathbb{I}(\text{Day } t \text{ covered})}{T} \times 100\%$$
                     </p>
                     <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
-                        <strong>The Overlap Flaw:</strong> Sums raw days of supply without shifting overlaps. If a patient stockpiles or refills early, MPR can exceed $100\%$ or falsely score $100\%$ despite having a large 2-month gap at year-end!
+                        <strong>CMA7 vs CMA8:</strong> CMA7 pushes overlapping days forward inside the observation window. CMA8 truncates early-supply carryover at the initiation boundary ($t_0$).
                     </p>
                 </div>
                 <div style="padding: 1rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #10b981;">
-                    <strong style="color: #10b981; font-size: 0.875rem;">Proportion of Days Covered (PDC)</strong>
+                    <strong style="color: #10b981; font-size: 0.875rem;">Group-Based Trajectory Modeling (GBTM)</strong>
                     <p style="margin-top: 0.5rem; font-size: 0.8125rem;">
-                        $$\text{PDC} = \frac{\sum_{t=1}^T \mathbb{I}(\text{Day } t \text{ is covered})}{\text{Observation Period (Days)}} \times 100\%$$
+                        $$P(Y_i) = \sum_{j=1}^J \pi_j P(Y_i \mid \text{Group } j, \boldsymbol{\beta}_j)$$
                     </p>
                     <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
-                        <strong>The PQA Gold Standard:</strong> Overlapping supply days are pushed forward into future non-covered days. PDC is mathematically bounded in $[0\%, 100\%]$. Patients with $\text{PDC} \ge 80\%$ are classified as clinically adherent.
+                        <strong>Latent Clusters:</strong> Rather than forcing patients into binary $80\%$ cutoff, GBTM discovers distinct behavioral archetypes: <em>Consistent Adherers</em>, <em>Gradual Decliners</em>, <em>Gap-and-Restart</em>, and <em>Early Discontinuers</em>.
                     </p>
                 </div>
             </div>
@@ -81,9 +81,13 @@
 
         <!-- 3. Interactive Workbench -->
         <section class="section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                <h2>Interactive Adherence Simulator</h2>
-                <span class="badge badge-emerald" id="adherent-badge">PDC Adherent (≥ 80%)</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                <h2>Interactive Adherence &amp; Trajectory Workbench</h2>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button id="btn-pin-curve" class="btn btn-secondary btn-sm">📌 Pin Current Curve (Delta)</button>
+                    <button id="btn-export-csv" class="btn btn-secondary btn-sm">📥 Download Claims CSV</button>
+                    <span class="badge badge-emerald" id="adherent-badge">PDC Adherent (≥ 80%)</span>
+                </div>
             </div>
 
             <div class="sim-layout">
@@ -94,11 +98,22 @@
                     <div class="controls-panel" style="margin-bottom: 0;">
                         <div class="controls-panel-title">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
-                            <span>Adherence Profile Presets</span>
+                            <span>Adherence &amp; Cohort Settings</span>
+                        </div>
+
+                        <!-- View Mode Toggle -->
+                        <div class="control-group">
+                            <label for="adherence-view-mode">
+                                <span>Visualization Focus</span>
+                            </label>
+                            <select id="adherence-view-mode" class="select-input">
+                                <option value="patient" selected>Single-Patient Claims Bitmask &amp; Calendar</option>
+                                <option value="gbtm">Cohort Group-Based Trajectories (GBTM)</option>
+                            </select>
                         </div>
 
                         <!-- Preset Scenarios -->
-                        <div class="control-group">
+                        <div class="control-group" id="scenario-control-group">
                             <label for="adherence-scenario">
                                 <span>Refill Behavioral Profile</span>
                             </label>
@@ -108,6 +123,26 @@
                                 <option value="perfect_adherent">Profile 3: Ideal Continuous Adherent (PDC 96%)</option>
                                 <option value="terminal_dropout">Profile 4: Terminal Discontinuation at Month 7</option>
                             </select>
+                        </div>
+
+                        <!-- CMA Taxonomy Selection -->
+                        <div class="control-group">
+                            <label for="cma-taxonomy-select">
+                                <span>CMA Overlap Taxonomy</span>
+                            </label>
+                            <select id="cma-taxonomy-select" class="select-input">
+                                <option value="cma7" selected>CMA7: Push-Forward Inside Window (Standard)</option>
+                                <option value="cma8">CMA8: Censor Pre-Window Inflow Carryover</option>
+                            </select>
+                        </div>
+
+                        <!-- Out-of-Pocket Copay Elasticity Slider -->
+                        <div class="control-group">
+                            <label for="copay-slider">
+                                <span>Out-of-Pocket Copay ($)</span>
+                                <span class="control-value" id="copay-val">$25</span>
+                            </label>
+                            <input type="range" id="copay-slider" min="0" max="200" value="25" step="5">
                         </div>
 
                         <!-- Observation Window -->
@@ -122,7 +157,7 @@
                         <!-- Early Refill Push Button -->
                         <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle);">
                             <button id="btn-trigger-early" class="btn btn-secondary btn-sm">
-                                ⚡ Simulate Sudden Early Refill (+30d supply)
+                                ⚡ Simulate Early Refill (+30d supply)
                             </button>
                             <button id="btn-reset-claims" class="btn btn-secondary btn-sm">
                                 Reset Profile Claims
@@ -146,8 +181,8 @@
                             <span class="stat-value" id="val-mpr-capped" style="color: #38bdf8;">100.0%</span>
                         </div>
                         <div class="stat-row">
-                            <span class="stat-label">Variable MPR (to Last Refill)</span>
-                            <span class="stat-value" id="val-mpr-var">98.2%</span>
+                            <span class="stat-label">Primary Abandonment Rate</span>
+                            <span class="stat-value" id="val-abandon-rate" style="color: #f43f5e;">14.2%</span>
                         </div>
                         <div class="stat-row">
                             <span class="stat-label">Total Days Covered</span>
@@ -164,13 +199,13 @@
                 <!-- Main Visualization Area -->
                 <div class="sim-main">
 
-                    <!-- Plotly Claims & Daily Coverage Timeline -->
+                    <!-- Plotly Claims & Daily Coverage Timeline OR GBTM Trajectories -->
                     <div class="chart-container">
-                        <div id="chart-adherence-timeline" style="width: 100%; height: 320px;"></div>
+                        <div id="chart-adherence-timeline" style="width: 100%; height: 330px;"></div>
                     </div>
 
-                    <!-- 365-Day Pill Adherence Calendar Grid -->
-                    <div style="margin-top: 1.25rem;">
+                    <!-- 365-Day Pill Adherence Calendar Grid (Shown in Patient Mode) -->
+                    <div id="calendar-section" style="margin-top: 1.25rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                             <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground);">
                                 365-Day Daily Coverage Bitmask Calendar
@@ -192,6 +227,61 @@
                             <div class="calendar-grid" id="calendar-grid">
                                 <!-- 365 dots dynamically generated -->
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- GBTM Trajectory Table (Shown in GBTM Mode) -->
+                    <div id="gbtm-table-section" style="margin-top: 1.25rem; display: none;">
+                        <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground); margin-bottom: 0.5rem;">
+                            Latent Trajectory Cluster Distribution ($N = 2,500$ Cohort)
+                        </h4>
+                        <div class="claims-table-wrapper">
+                            <table class="claims-table">
+                                <thead>
+                                    <tr>
+                                        <th>Trajectory Group</th>
+                                        <th>Cohort Share (%)</th>
+                                        <th>Month 1 Adherence</th>
+                                        <th>Month 6 Adherence</th>
+                                        <th>Month 12 Adherence</th>
+                                        <th>Clinical Characteristics</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="color: #10b981; font-weight: 600;">1. Consistent Adherers</td>
+                                        <td>44.5%</td>
+                                        <td>98.0%</td>
+                                        <td>94.2%</td>
+                                        <td>91.8%</td>
+                                        <td>High health literacy, automated 90-day mail-order refills</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color: #f59e0b; font-weight: 600;">2. Gradual Decliners</td>
+                                        <td>26.2%</td>
+                                        <td>94.5%</td>
+                                        <td>68.0%</td>
+                                        <td>48.5%</td>
+                                        <td>Asymptomatic disease drift, side-effect fatigue</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color: #38bdf8; font-weight: 600;">3. Gap-and-Restart</td>
+                                        <td>15.8%</td>
+                                        <td>92.0%</td>
+                                        <td>32.0%</td>
+                                        <td>74.5%</td>
+                                        <td>Insurance lapse, temporary adverse event holiday, physician restart</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color: #f43f5e; font-weight: 600;">4. Early Discontinuers</td>
+                                        <td>13.5%</td>
+                                        <td>88.0%</td>
+                                        <td>8.5%</td>
+                                        <td>2.0%</td>
+                                        <td>High out-of-pocket copay friction, primary tolerability failure</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Demographics, Comorbidity Matrix &amp; Risk Quintiles — rx.sim</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z'/><path d='m8.5 8.5 7 7'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container nav-container">
+            <a href="../../index.html" class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+                    <path d="m8.5 8.5 7 7"/>
+                </svg>
+                <span class="brand-name">rx<span class="brand-dot">.</span>sim</span>
+            </a>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="breadcrumb" style="margin-bottom: 0;">
+                    <a href="../../index.html">Home</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <a href="../../index.html#modules">Modules</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <span class="breadcrumb-current">Demographics &amp; Comorbidities</span>
+                </div>
+                <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer" class="nav-link" style="font-size: 0.8125rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Profile</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <!-- 1. Header -->
+        <header class="experiment-header">
+            <div class="hero-pill" style="margin-bottom: 1rem;">
+                <span class="hero-pill-indicator"></span>
+                <span>Real-World Evidence (RWD) &middot; HEOR &amp; Epidemiological Cohorts</span>
+            </div>
+            <h1>Patient Demographics, Comorbidity Matrix &amp; Risk Quintiles</h1>
+            <p class="subtitle">Simulate longitudinal claims demographics, age-sex population pyramids, Charlson Comorbidity Index (CCI) weighting, comorbidity co-occurrence heatmaps, and adherence drop-off by risk quintile</p>
+        </header>
+
+        <!-- 2. Theory Section -->
+        <div class="theory-box">
+            <h3>Demographic Pyramids, Payer Channels &amp; Charlson Comorbidity Index (CCI)</h3>
+            <p>
+                In real-world data (RWD) claims analysis (Optum, MarketScan, Medicare FFS, Symphony), patient outcomes are fundamentally governed by baseline demographic characteristics, insurance channel eligibility, and multimorbidity burden.
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 1rem;">
+                <div style="padding: 1rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #38bdf8;">
+                    <strong style="color: #38bdf8; font-size: 0.875rem;">Charlson Comorbidity Index (CCI) Scoring</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.8125rem;">
+                        $$\text{CCI} = \sum_{k=1}^K w_k \cdot x_k, \qquad w_k \in \{1, 2, 3, 6\}$$
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                        <strong>ICD-10 Clinical Weighting:</strong> Mild conditions (MI, CHF, COPD, Diabetes) receive weight $+1$; end-organ damage (complicated diabetes, moderate/severe CKD, hemiplegia) receives $+2$; severe liver disease receives $+3$; and metastatic malignancy receives $+6$.
+                    </p>
+                </div>
+                <div style="padding: 1rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #10b981;">
+                    <strong style="color: #10b981; font-size: 0.875rem;">Multimorbidity Risk Quintiles &amp; The Age 65 Cliff</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.8125rem;">
+                        $$J(A, B) = \frac{|A \cap B|}{|A \cup B|}, \qquad \text{PDC}(Q) = \text{PDC}_0 - \beta \cdot \text{CCI}_Q$$
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                        <strong>Polypharmacy &amp; Adherence:</strong> As patients progress into higher risk quintiles ($Q_4\text{--}Q_5$), regimen complexity increases exponentially. This clinical friction drives severe drops in 12-month Proportion of Days Covered (PDC) and increases hospitalization hazard.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Interactive Workbench -->
+        <section class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h2>Interactive Demographic &amp; Comorbidity Workbench</h2>
+                <span class="badge badge-emerald" id="cohort-status-badge">Cohort Balanced (CCI 2.1)</span>
+            </div>
+
+            <div class="sim-layout">
+
+                <!-- Sidebar Parameter Controls -->
+                <aside class="sim-sidebar">
+
+                    <div class="controls-panel" style="margin-bottom: 0;">
+                        <div class="controls-panel-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            <span>Cohort Demographics &amp; Burden</span>
+                        </div>
+
+                        <!-- Clinical Indication Preset -->
+                        <div class="control-group">
+                            <label for="cohort-preset">
+                                <span>Clinical Indication Preset</span>
+                            </label>
+                            <select id="cohort-preset" class="select-input">
+                                <option value="t2d_metabolic">Type 2 Diabetes &amp; Cardiometabolic (Mean Age ~62)</option>
+                                <option value="oncology">Oncology &amp; Solid Tumors (Mean Age ~68, Frail)</option>
+                                <option value="autoimmune">Autoimmune &amp; Rheumatology (Mean Age ~51, 74% Female)</option>
+                                <option value="heart_failure">Heart Failure &amp; Cardiorenal (Mean Age ~73, High CCI)</option>
+                            </select>
+                        </div>
+
+                        <!-- Cohort Sample Size -->
+                        <div class="control-group">
+                            <label for="cohort-size-slider">
+                                <span>Cohort Sample Size (Patients)</span>
+                                <span class="control-value" id="cohort-size-val">3,500</span>
+                            </label>
+                            <input type="range" id="cohort-size-slider" min="1000" max="10000" value="3500" step="500">
+                        </div>
+
+                        <!-- Mean Cohort Age -->
+                        <div class="control-group">
+                            <label for="age-slider">
+                                <span>Mean Cohort Age (Years)</span>
+                                <span class="control-value" id="age-val">62 yrs</span>
+                            </label>
+                            <input type="range" id="age-slider" min="42" max="78" value="62" step="1">
+                        </div>
+
+                        <!-- Comorbidity Burden Multiplier -->
+                        <div class="control-group">
+                            <label for="comorb-multiplier-slider">
+                                <span>Multimorbidity Burden Multiplier</span>
+                                <span class="control-value" id="comorb-multiplier-val">1.0×</span>
+                            </label>
+                            <input type="range" id="comorb-multiplier-slider" min="0.5" max="2.0" value="1.0" step="0.1">
+                        </div>
+
+                        <!-- Payer Channel Bias -->
+                        <div class="control-group">
+                            <label for="payer-shift-select">
+                                <span>Payer Channel Orientation</span>
+                            </label>
+                            <select id="payer-shift-select" class="select-input">
+                                <option value="0" selected>Standard Real-World Age-Based Mix</option>
+                                <option value="1">Medicare Advantage / Elderly Leaning</option>
+                                <option value="-1">Commercial / Working Age Leaning</option>
+                            </select>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle);">
+                            <button id="btn-aging-shift" class="btn btn-secondary btn-sm">
+                                ⚡ Simulate Aging / Frail Cohort (+8 yrs, 1.4× burden)
+                            </button>
+                            <button id="btn-reset-cohort" class="btn btn-secondary btn-sm">
+                                Reset Baseline Demographics
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- Direct Cohort KPI Scorecard -->
+                    <div class="stats-card">
+                        <div class="stat-row">
+                            <span class="stat-label">Total Sample Size</span>
+                            <span class="stat-value" id="val-total-pts">3,500</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Mean Patient Age</span>
+                            <span class="stat-value" id="val-mean-age" style="color: #38bdf8; font-weight: 700;">62.4 yrs</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Female Sex Ratio</span>
+                            <span class="stat-value" id="val-female-ratio">51.2%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Mean Charlson Index (CCI)</span>
+                            <span class="stat-value" id="val-mean-cci" style="color: #10b981; font-weight: 700;">2.14</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">High-Risk Share (Q4 + Q5)</span>
+                            <span class="stat-value" id="val-high-risk-share" style="color: #f59e0b;">38.6%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Medicare Payer Share (65+)</span>
+                            <span class="stat-value" id="val-medicare-share">46.8%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Adherent Patients (PDC ≥ 80%)</span>
+                            <span class="stat-value" id="val-adherent-share" style="color: #10b981;">72.4%</span>
+                        </div>
+                    </div>
+
+                </aside>
+
+                <!-- Main Visualization Area -->
+                <div class="sim-main">
+
+                    <!-- Plotly Chart 1: Demographic Age-Sex Population Pyramid -->
+                    <div class="chart-container">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0 0.5rem;">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground);">
+                                Age-Sex Population Pyramid &amp; Age 65 Medicare Cliff
+                            </h4>
+                            <span style="font-size: 0.75rem; color: var(--muted-foreground);">
+                                Bidirectional binned distribution: Male (Left) vs Female (Right)
+                            </span>
+                        </div>
+                        <div id="chart-age-pyramid" style="width: 100%; height: 320px;"></div>
+                    </div>
+
+                    <!-- Plotly Chart 2: Comorbidity Co-Occurrence Heatmap -->
+                    <div class="chart-container" style="margin-top: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0 0.5rem;">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground);">
+                                Comorbidity Co-Occurrence &amp; Disease Clustering Heatmap
+                            </h4>
+                            <span style="font-size: 0.75rem; color: var(--muted-foreground);">
+                                Joint prevalence $P(A \cap B)$ and Cardiorenal-Metabolic clustering
+                            </span>
+                        </div>
+                        <div id="chart-comorbidity-heatmap" style="width: 100%; height: 350px;"></div>
+                    </div>
+
+                    <!-- Plotly Chart 3: Clinical Outcomes by Risk Quintile -->
+                    <div class="chart-container" style="margin-top: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0 0.5rem;">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground);">
+                                Clinical Outcomes by Risk Quintile: Adherence (PDC) vs Discontinuation
+                            </h4>
+                            <span style="font-size: 0.75rem; color: var(--muted-foreground);">
+                                Real-World Evidence (RWE) penalty of multimorbidity and polypharmacy
+                            </span>
+                        </div>
+                        <div id="chart-quintile-outcomes" style="width: 100%; height: 310px;"></div>
+                    </div>
+
+                    <!-- Data Table: Risk Quintile Summary -->
+                    <div style="margin-top: 1.5rem;">
+                        <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground); margin-bottom: 0.75rem;">
+                            Cohort Risk Quintile Stratification (Q1 Minimal → Q5 Severe Multimorbid)
+                        </h4>
+                        <div class="claims-table-wrapper" style="overflow-x: auto;">
+                            <table class="claims-table" id="quintile-data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Risk Quintile</th>
+                                        <th>Patient Count</th>
+                                        <th>% Cohort</th>
+                                        <th>Mean Age</th>
+                                        <th>Female %</th>
+                                        <th>Mean CCI</th>
+                                        <th>Mean PDC %</th>
+                                        <th>% Adherent</th>
+                                        <th>12-Mo Discon %</th>
+                                        <th>Hosp Risk %</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="quintile-table-body">
+                                    <!-- Dynamically populated rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- HEOR & Epidemiological Callout Insight -->
+                    <div class="callout-insight" id="cohort-callout" style="margin-top: 1.25rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <div id="cohort-callout-text">
+                            Analyzing baseline demographic distribution and comorbidity clustering...
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>rx.sim &middot; Longitudinal Patient Analytics &middot; <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer">Vimal Joshy</a></p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script type="module">
+        import init from './simulation.js';
+        init();
+        if (window.renderMathInElement) {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false }
+                ]
+            });
+        }
+    </script>
+</body>
+</html>
+

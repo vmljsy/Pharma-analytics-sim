@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Indication Probabilistic Attribution — rx.sim</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z'/><path d='m8.5 8.5 7 7'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container nav-container">
+            <a href="../../index.html" class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+                    <path d="m8.5 8.5 7 7"/>
+                </svg>
+                <span class="brand-name">rx<span class="brand-dot">.</span>sim</span>
+            </a>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="breadcrumb" style="margin-bottom: 0;">
+                    <a href="../../index.html">Home</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <a href="../../index.html#modules">Modules</a>
+                    <span class="breadcrumb-sep">/</span>
+                    <span class="breadcrumb-current">Indication Splitting</span>
+                </div>
+                <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer" class="nav-link" style="font-size: 0.8125rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Profile</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <!-- 1. Header -->
+        <header class="experiment-header">
+            <div class="hero-pill" style="margin-bottom: 1rem;">
+                <span class="hero-pill-indicator"></span>
+                <span>RWD Claims Engineering &middot; Multi-Indication Attribution</span>
+            </div>
+            <h1>Multi-Indication Probabilistic Attribution</h1>
+            <p class="subtitle">Dissect unlabelled pharmacy claims across multi-indication biologics by comparing deterministic waterfall heuristics against Naive Bayes soft attribution models</p>
+        </header>
+
+        <!-- 2. Theory Section -->
+        <div class="theory-box">
+            <h3>The Pharmacy Claims Diagnosis Blind-Spot &amp; Attribution Heuristics</h3>
+            <p>
+                In US retail and specialty pharmacy claims (NCPDP standard), prescriptions rarely contain an ICD-10 diagnosis code. For multi-indication biologics (e.g., Humira, Stelara, Dupixent across Rheumatology, Dermatology, and Gastroenterology), commercial teams must infer indication:
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 1rem;">
+                <div style="padding: 1rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #38bdf8;">
+                    <strong style="color: #38bdf8; font-size: 0.875rem;">1. Deterministic Rule Waterfall</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.8125rem;">
+                        $$\text{Rx} \longrightarrow \text{Matched Dx } [-90, +30\text{d}] \longrightarrow \text{HCP Taxonomy} \longrightarrow \text{Induction Dosing}$$
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                        <strong>Rigid Hierarchy:</strong> Prioritizes medical claim linkage first. If no medical claim exists, falls back to prescriber NPI primary specialty, then dosing schedule.
+                    </p>
+                </div>
+                <div style="padding: 1rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #10b981;">
+                    <strong style="color: #10b981; font-size: 0.875rem;">2. Naive Bayes Soft Attribution</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.8125rem;">
+                        $$P(I_k \mid \mathbf{x}) \propto P(I_k) \prod_{j=1}^D P(x_j \mid I_k)$$
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                        <strong>Probabilistic Allocation:</strong> Computes posterior indication probabilities, properly handling multi-morbid patients with dual diagnoses (e.g., Psoriasis + Psoriatic Arthritis).
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Interactive Workbench -->
+        <section class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                <h2>Interactive Attribution Workbench</h2>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button id="btn-pin-curve" class="btn btn-secondary btn-sm">📌 Pin Current Attribution</button>
+                    <button id="btn-export-csv" class="btn btn-secondary btn-sm">📥 Download Attributed CSV</button>
+                    <span class="badge badge-emerald" id="attribution-badge">Attribution Accuracy: 91.4%</span>
+                </div>
+            </div>
+
+            <div class="sim-layout">
+
+                <!-- Sidebar Parameter Controls -->
+                <aside class="sim-sidebar">
+
+                    <div class="controls-panel" style="margin-bottom: 0;">
+                        <div class="controls-panel-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                            <span>Model &amp; Claims Parameters</span>
+                        </div>
+
+                        <!-- Multi-Indication Drug Preset -->
+                        <div class="control-group">
+                            <label for="drug-preset-select">
+                                <span>Multi-Indication Therapeutic Class</span>
+                            </label>
+                            <select id="drug-preset-select" class="select-input">
+                                <option value="anti_tnf" selected>Anti-TNF (Rheumatology vs Derm vs GI)</option>
+                                <option value="il17_23">IL-17/23 Inhibitor (Psoriasis vs PsA vs Crohn's)</option>
+                                <option value="jak_inhibitor">JAK Inhibitor (RA vs Atopic Derm vs UC)</option>
+                            </select>
+                        </div>
+
+                        <!-- Medical Claims Linkage Completeness -->
+                        <div class="control-group">
+                            <label for="linkage-slider">
+                                <span>Medical Dx Linkage Completeness</span>
+                                <span class="control-value" id="linkage-val">65%</span>
+                            </label>
+                            <input type="range" id="linkage-slider" min="20" max="95" value="65" step="5">
+                            <span class="control-hint">Share of Rx fills with an accessible medical claims trace</span>
+                        </div>
+
+                        <!-- Prescriber Specialization Noise -->
+                        <div class="control-group">
+                            <label for="specialty-noise-slider">
+                                <span>Prescriber Specialty Ambiguity</span>
+                                <span class="control-value" id="specialty-noise-val">20%</span>
+                            </label>
+                            <input type="range" id="specialty-noise-slider" min="5" max="45" value="20" step="5">
+                            <span class="control-hint">Primary Care / Cross-specialty prescribing volume</span>
+                        </div>
+
+                        <!-- Induction Dosing Detection -->
+                        <div class="control-group">
+                            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                                <span>Induction Dosing Signature</span>
+                                <input type="checkbox" id="check-induction-dose" checked style="accent-color: var(--chart-blue); width: 16px; height: 16px;">
+                            </label>
+                            <span class="control-hint">Detects double-strength loading dose at therapy start</span>
+                        </div>
+
+                        <!-- Sample Size -->
+                        <div class="control-group">
+                            <label for="sample-size-slider">
+                                <span>Simulated Patient Cohort ($N$)</span>
+                                <span class="control-value" id="sample-size-val">2,500</span>
+                            </label>
+                            <input type="range" id="sample-size-slider" min="1000" max="5000" value="2500" step="500">
+                        </div>
+
+                    </div>
+
+                    <!-- Direct Attribution Scorecard -->
+                    <div class="stats-card">
+                        <div class="stat-row">
+                            <span class="stat-label">Waterfall Accuracy</span>
+                            <span class="stat-value" id="stat-waterfall-acc" style="color: #38bdf8; font-weight: 700;">83.2%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Bayes Soft Accuracy</span>
+                            <span class="stat-value" id="stat-bayes-acc" style="color: #10b981; font-weight: 700;">91.4%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Unattributed Claims (Waterfall)</span>
+                            <span class="stat-value" id="stat-unattributed" style="color: #f43f5e;">8.4%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Multi-Indication Patients</span>
+                            <span class="stat-value" id="stat-multi-indication">18.2%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Induction Dosing Detected</span>
+                            <span class="stat-value" id="stat-induction-rate">32.6%</span>
+                        </div>
+                    </div>
+
+                </aside>
+
+                <!-- Main Visualization Area -->
+                <div class="sim-main">
+
+                    <!-- Plotly Attribution Comparison Bar -->
+                    <div class="chart-container">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0 0.5rem;">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--foreground);">
+                                Indication Share: Ground Truth vs Waterfall Rules vs Naive Bayes
+                            </h4>
+                            <span style="font-size: 0.75rem; color: var(--muted-foreground);">
+                                Distribution of attributed volume across clinical indications
+                            </span>
+                        </div>
+                        <div id="chart-attribution-bars" style="width: 100%; height: 320px;"></div>
+                    </div>
+
+                    <!-- Confusion Matrix Heatmap & Patient Journey Trace -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 1.25rem;">
+                        
+                        <!-- Confusion Matrix -->
+                        <div class="chart-container">
+                            <h4 style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--foreground);">
+                                Classification Confusion Matrix (Truth vs Predicted)
+                            </h4>
+                            <div id="chart-confusion-matrix" style="width: 100%; height: 260px;"></div>
+                        </div>
+
+                        <!-- Induction Signature Impact -->
+                        <div class="chart-container">
+                            <h4 style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--foreground);">
+                                Signal Attribution Weight by Feature
+                            </h4>
+                            <div id="chart-feature-weights" style="width: 100%; height: 260px;"></div>
+                        </div>
+
+                    </div>
+
+                    <!-- Callout Insight -->
+                    <div class="callout-insight" id="attribution-callout" style="margin-top: 1rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <div id="attribution-callout-text">
+                            Analyzing multi-indication attribution mechanics...
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>rx.sim &middot; Longitudinal Patient Analytics &middot; <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer">Vimal Joshy</a></p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script type="module">
+        import init from './simulation.js';
+        init();
+        if (window.renderMathInElement) {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false }
+                ]
+            });
+        }
+    </script>
+</body>
+</html>
+

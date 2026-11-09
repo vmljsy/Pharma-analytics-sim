@@ -55,9 +55,9 @@
             <!-- Quick Metrics Header -->
             <div class="metrics-grid" style="margin-top: 2rem;">
                 <div class="metric-card">
-                    <span class="metric-number">6</span>
+                    <span class="metric-number">12</span>
                     <span class="metric-title">Interactive Modules</span>
-                    <span class="metric-desc">Claims to Market Models</span>
+                    <span class="metric-desc">Claims to Causal RWE</span>
                 </div>
                 <div class="metric-card">
                     <span class="metric-number">100%</span>
@@ -83,14 +83,14 @@
                 <div>
                     <h2>Interactive Analytics Modules</h2>
                     <p style="font-size: 0.875rem; color: var(--muted-foreground); margin-top: 0.25rem;">
-                        Select a category to filter clinical episode, commercial market, and biostatistical models
+                        Select a category to filter clinical episode, commercial SFE, and causal RWE models
                     </p>
                 </div>
-                <div class="tabs-list">
-                    <button class="tab-btn active" data-filter="all">All (6)</button>
-                    <button class="tab-btn" data-filter="claims">Claims &amp; Episodes (2)</button>
-                    <button class="tab-btn" data-filter="commercial">Commercial &amp; Flow (2)</button>
-                    <button class="tab-btn" data-filter="clinical">Biostats &amp; Oncology (2)</button>
+                <div class="tabs-list" role="tablist">
+                    <button class="tabs-trigger tab-btn active" data-filter="all">All <span class="tab-count">12</span></button>
+                    <button class="tabs-trigger tab-btn" data-filter="claims">Claims &amp; RWD <span class="tab-count">4</span></button>
+                    <button class="tabs-trigger tab-btn" data-filter="commercial">Commercial &amp; SFE <span class="tab-count">4</span></button>
+                    <button class="tabs-trigger tab-btn" data-filter="clinical">Biostats &amp; Causal <span class="tab-count">4</span></button>
                 </div>
             </div>
 
@@ -211,6 +211,120 @@
                     </div>
                 </a>
 
+                <!-- Module 7: HCP Concentration & SFE Alignment -->
+                <a href="experiments/hcp-targeting-sfe/" class="card experiment-card" data-category="commercial">
+                    <div class="experiment-card-header">
+                        <div class="hero-pill" style="font-size: 0.75rem;">
+                            <span>Pharma SFE &amp; Operations</span>
+                        </div>
+                        <span class="badge badge-emerald">Live Interactive</span>
+                    </div>
+                    <h3 class="experiment-card-title">HCP Concentration, Deciles &amp; SFE Alignment</h3>
+                    <p class="experiment-card-desc">
+                        Model prescriber volume skew using Lorenz concentration curves, Gini index ($\text{Gini} \approx 0.75$), doctor decile/quintile segmentation, and regional field sales rep territory call planning.
+                    </p>
+                    <div class="experiment-card-meta">
+                        <span>Lorenz Curve &amp; Gini</span>
+                        <span>Deciles &amp; Quintiles</span>
+                        <span>Regional SFE R&amp;F</span>
+                    </div>
+                </a>
+
+                <!-- Module 8: Patient Demographics & Comorbidities -->
+                <a href="experiments/patient-demographics-comorbidities/" class="card experiment-card" data-category="claims">
+                    <div class="experiment-card-header">
+                        <div class="hero-pill" style="font-size: 0.75rem;">
+                            <span>Claims &amp; Epidemiology</span>
+                        </div>
+                        <span class="badge badge-emerald">Live Interactive</span>
+                    </div>
+                    <h3 class="experiment-card-title">Patient Demographics &amp; Comorbidity Matrix</h3>
+                    <p class="experiment-card-desc">
+                        Simulate age-sex population pyramids, Medicare age 65 payer transitions, Charlson Comorbidity Index (CCI) weighting, comorbidity co-occurrence heatmaps, and adherence risk quintiles.
+                    </p>
+                    <div class="experiment-card-meta">
+                        <span>Age-Sex Pyramids</span>
+                        <span>Charlson Index (CCI)</span>
+                        <span>Risk Quintiles</span>
+                    </div>
+                </a>
+
+                <!-- Module 9: Multi-Indication Probabilistic Attribution -->
+                <a href="experiments/indication-splitting/" class="card experiment-card" data-category="clinical">
+                    <div class="experiment-card-header">
+                        <div class="hero-pill" style="font-size: 0.75rem;">
+                            <span>Multi-Indication RWD</span>
+                        </div>
+                        <span class="badge badge-emerald">Live Interactive</span>
+                    </div>
+                    <h3 class="experiment-card-title">Multi-Indication Probabilistic Attribution</h3>
+                    <p class="experiment-card-desc">
+                        Dissect unlabelled pharmacy claims across multi-indication biologics by comparing deterministic waterfall heuristics against Naive Bayes soft attribution models.
+                    </p>
+                    <div class="experiment-card-meta">
+                        <span>Waterfall Rules</span>
+                        <span>Naive Bayes Posterior</span>
+                        <span>Induction Loading</span>
+                    </div>
+                </a>
+
+                <!-- Module 10: Open-Network Censoring & Eligibility Proxy -->
+                <a href="experiments/open-network-censoring/" class="card experiment-card" data-category="claims">
+                    <div class="experiment-card-header">
+                        <div class="hero-pill" style="font-size: 0.75rem;">
+                            <span>RWD Network Censoring</span>
+                        </div>
+                        <span class="badge badge-emerald">Live Interactive</span>
+                    </div>
+                    <h3 class="experiment-card-title">Open-Network Censoring &amp; Eligibility Proxy</h3>
+                    <p class="experiment-card-desc">
+                        Demonstrate how open commercial LRX claims networks lose visibility to non-reporting pharmacies, introducing artificial downward persistence bias that requires pharmacy activity floors to correct.
+                    </p>
+                    <div class="experiment-card-meta">
+                        <span>Activity Floor Proxy</span>
+                        <span>Downward Bias Recovery</span>
+                        <span>Open vs Closed LRX</span>
+                    </div>
+                </a>
+
+                <!-- Module 11: Payer Formulary Adjudication Funnel -->
+                <a href="experiments/adjudication-funnel/" class="card experiment-card" data-category="commercial">
+                    <div class="experiment-card-header">
+                        <div class="hero-pill" style="font-size: 0.75rem;">
+                            <span>Payer Formulary Access</span>
+                        </div>
+                        <span class="badge badge-emerald">Live Interactive</span>
+                    </div>
+                    <h3 class="experiment-card-title">Payer Formulary Adjudication Funnel</h3>
+                    <p class="experiment-card-desc">
+                        Simulate real-world dispensary attrition from written prescriptions to paid claims through Prior Authorization (PA) hurdles, Weibull turnaround delays, and copay abandonment elasticity.
+                    </p>
+                    <div class="experiment-card-meta">
+                        <span>PA Rejection &amp; Approval</span>
+                        <span>Weibull Turnaround Lag</span>
+                        <span>Copay Elasticity</span>
+                    </div>
+                </a>
+
+                <!-- Module 12: Synthetic Control & Target Trial Emulation -->
+                <a href="experiments/synthetic-control/" class="card experiment-card" data-category="clinical">
+                    <div class="experiment-card-header">
+                        <div class="hero-pill" style="font-size: 0.75rem;">
+                            <span>Causal Inference</span>
+                        </div>
+                        <span class="badge badge-emerald">Live Interactive</span>
+                    </div>
+                    <h3 class="experiment-card-title">Synthetic Control &amp; Target Trial Emulation</h3>
+                    <p class="experiment-card-desc">
+                        Eliminate confounding by indication and immortal time bias in observational comparative effectiveness using Inverse Probability of Treatment Weighting (IPTW) and Clone-Censor-Weight trial emulation.
+                    </p>
+                    <div class="experiment-card-meta">
+                        <span>IPTW Propensity Scores</span>
+                        <span>Love Plot SMD &lt; 0.1</span>
+                        <span>Target Trial CCW</span>
+                    </div>
+                </a>
+
             </div>
         </section>
 
@@ -267,9 +381,9 @@
                 });
             }
 
-            document.querySelectorAll('.tab-btn').forEach(btn => {
+            document.querySelectorAll('.tab-btn, .tabs-trigger').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-btn, .tabs-trigger').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     const filter = btn.getAttribute('data-filter');
                     document.querySelectorAll('.experiment-card').forEach(card => {

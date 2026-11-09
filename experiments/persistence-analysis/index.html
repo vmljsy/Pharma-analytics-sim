@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Treatment Persistence &amp; Kaplan-Meier Survival — rx.sim</title>
+    <title>Treatment Persistence, Kaplan-Meier &amp; Parametric Survival — rx.sim</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z'/><path d='m8.5 8.5 7 7'/></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,9 +27,9 @@
                 <div class="breadcrumb" style="margin-bottom: 0;">
                     <a href="../../index.html">Home</a>
                     <span class="breadcrumb-sep">/</span>
-                    <a href="../../index.html#experiments">Modules</a>
+                    <a href="../../index.html#modules">Modules</a>
                     <span class="breadcrumb-sep">/</span>
-                    <span class="breadcrumb-current">Treatment Persistence</span>
+                    <span class="breadcrumb-current">Treatment Persistence &amp; KM Survival</span>
                 </div>
                 <a href="https://vmljsy.github.io" target="_blank" rel="noopener noreferrer" class="nav-link" style="font-size: 0.8125rem;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -45,40 +45,49 @@
         <header class="experiment-header">
             <div class="hero-pill" style="margin-bottom: 1rem;">
                 <span class="hero-pill-indicator"></span>
-                <span>Time-to-Event Biostatistics &middot; Survival Analysis</span>
+                <span>Biostatistics &middot; Survival Analysis &amp; Parametric Extrapolations</span>
             </div>
-            <h1>Treatment Persistence &amp; Kaplan-Meier Survival</h1>
-            <p class="subtitle">Model time-to-discontinuation (TTD), Greenwood confidence intervals, right-censoring, and the permissible gap sensitivity paradox in real-world longitudinal cohorts</p>
+            <h1>Treatment Persistence, Kaplan-Meier &amp; Parametric Extrapolation</h1>
+            <p class="subtitle">Evaluate non-parametric product-limit curves, Greenwood confidence bands, Weibull/Log-Logistic/Gompertz parametric extrapolations, and Mixture Cure models</p>
         </header>
 
         <!-- 2. Theory Section -->
         <div class="theory-box">
-            <h3>Kaplan-Meier Survival Estimation in Real-World Evidence (RWE)</h3>
+            <h3>Kaplan-Meier Estimator, Greenwood Variance &amp; Mixture Cure Models</h3>
             <p>
-                Treatment persistence measures the duration of continuous medication adherence from index initiation to discontinuation. Because study periods end and patients may disenroll (loss to follow-up), persistence data is inherently <strong>right-censored</strong>.
+                In real-world observational persistence studies, treatment discontinuation is modeled as a time-to-event failure process with administrative and loss-to-follow-up right-censoring:
             </p>
-            <p>
-                The non-parametric Kaplan-Meier product-limit estimator accounts for censoring at discrete event times $t_i$:
-            </p>
-            <p>
-                $$\hat{S}(t) = \prod_{t_i \le t} \left( 1 - \frac{d_i}{n_i} \right)$$
-            </p>
-            <p style="font-size: 0.8125rem; color: var(--muted-foreground);">
-                Where $d_i$ is the number of discontinuation events at time $t_i$, and $n_i$ is the number of patients at risk immediately prior to $t_i$. Standard error is calculated using Greenwood's formula:
-            </p>
-            <p>
-                $$\widehat{\text{SE}}(\hat{S}(t)) = \hat{S}(t) \sqrt{ \sum_{t_i \le t} \frac{d_i}{n_i (n_i - d_i)} }$$
-            </p>
-            <div style="margin-top: 0.75rem; font-size: 0.875rem; color: var(--muted-foreground);">
-                <strong>The Permissible Gap Sensitivity Paradox:</strong> A patient who missed medication for 45 days is classified as "Discontinued" under a strict 30-day allowable gap rule, but as "Persistent" under a lenient 60-day rule. Tuning gap tolerance dramatically shifts median persistence!
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 1rem;">
+                <div style="padding: 1rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #38bdf8;">
+                    <strong style="color: #38bdf8; font-size: 0.875rem;">Kaplan-Meier Product-Limit Estimator</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.8125rem;">
+                        $$\hat{S}(t) = \prod_{t_i \le t} \left( 1 - \frac{d_i}{n_i} \right), \qquad \widehat{\text{SE}}(\hat{S}(t)) = \hat{S}(t) \sqrt{ \sum_{t_i \le t} \frac{d_i}{n_i (n_i - d_i)} }$$
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                        <strong>Permissible Gap Sensitivity:</strong> A missed refill of 45 days is a "Discontinuation" under a strict 30d gap rule, but "Continuous" under a 60d gap rule.
+                    </p>
+                </div>
+                <div style="padding: 1rem; background: var(--secondary); border-radius: var(--radius); border-left: 3px solid #10b981;">
+                    <strong style="color: #10b981; font-size: 0.875rem;">Parametric Extrapolation &amp; Mixture Cure Models</strong>
+                    <p style="margin-top: 0.5rem; font-size: 0.8125rem;">
+                        $$S(t) = \pi + (1-\pi)S_u(t), \qquad \text{RMST}(\tau) = \int_0^\tau S(t) \, dt$$
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                        <strong>HEOR Horizon Modeling:</strong> Parametric curves (Weibull, Log-Logistic, Gompertz) project long-term survival beyond clinical trial horizons. Cure fraction $\pi$ captures permanent responders.
+                    </p>
+                </div>
             </div>
         </div>
 
         <!-- 3. Interactive Workbench -->
         <section class="section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
                 <h2>Interactive Survival Workbench</h2>
-                <span class="badge badge-emerald" id="gap-badge">Gap Rule: 30-Day Allowance</span>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button id="btn-pin-curve" class="btn btn-secondary btn-sm">📌 Pin Current Curve (Delta)</button>
+                    <button id="btn-export-csv" class="btn btn-secondary btn-sm">📥 Download Survival CSV</button>
+                    <span class="badge badge-emerald" id="gap-badge">Gap Rule: 30-Day Allowance</span>
+                </div>
             </div>
 
             <div class="sim-layout">
@@ -89,7 +98,31 @@
                     <div class="controls-panel" style="margin-bottom: 0;">
                         <div class="controls-panel-title">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                            <span>Persistence Parameters</span>
+                            <span>Persistence &amp; Survival Parameters</span>
+                        </div>
+
+                        <!-- Parametric Extrapolation Dropdown -->
+                        <div class="control-group">
+                            <label for="extrapolation-select">
+                                <span>Parametric Survival Extrapolation</span>
+                            </label>
+                            <select id="extrapolation-select" class="select-input">
+                                <option value="km_only" selected>Non-Parametric Kaplan-Meier Only</option>
+                                <option value="weibull">+ Weibull Parametric Curve (Scale λ, Shape k)</option>
+                                <option value="loglogistic">+ Log-Logistic Curve (Median α, Shape β)</option>
+                                <option value="gompertz">+ Gompertz Model (Exponential Hazard Growth)</option>
+                                <option value="all_parametric">All Parametric Overlays (Weibull + Log-Log + Gomp)</option>
+                            </select>
+                        </div>
+
+                        <!-- Mixture Cure Model Slider -->
+                        <div class="control-group">
+                            <label for="cure-slider">
+                                <span>Mixture Cure Fraction ($\pi$)</span>
+                                <span class="control-value" id="cure-val">0%</span>
+                            </label>
+                            <input type="range" id="cure-slider" min="0" max="35" value="0" step="5">
+                            <span class="control-hint">Share of permanent long-term functional responders</span>
                         </div>
 
                         <!-- Allowable Gap Slider -->
@@ -99,7 +132,6 @@
                                 <span class="control-value" id="gap-val">30 days</span>
                             </label>
                             <input type="range" id="gap-slider" min="15" max="90" value="30" step="5">
-                            <span class="control-hint">Sensitivity test: wider gaps lift survival curve</span>
                         </div>
 
                         <!-- Cohort Size Slider -->
@@ -139,6 +171,10 @@
                         <div class="stat-row">
                             <span class="stat-label">Brand Median Persistence</span>
                             <span class="stat-value" id="stat-brand-median">248 d</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Brand RMST (24-Month Horizon)</span>
+                            <span class="stat-value" id="stat-brand-rmst" style="color: #38bdf8; font-weight: 700;">17.8 mos</span>
                         </div>
                         <div class="stat-row">
                             <span class="stat-label">Competitor Median Persistence</span>
